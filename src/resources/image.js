@@ -16,7 +16,7 @@ module.exports = function( k8 ) {
         method: "POST",
         url: "",
         handle: ( env ) => {
-          console.log( "received update for", env.data.image );
+          console.log( "received update for", env.data );
           return k8.update( env.data.image )
             .then( ( result ) => {
               return { data: result };
