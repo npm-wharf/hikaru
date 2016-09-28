@@ -8,6 +8,7 @@ const service = require( "./service" );
 // k8.update( "646934428650.dkr.ecr.us-west-2.amazonaws.com/lucro/marketplace:arobson_lucro.git_staging_0.1.0_1_7dcc011c" );
 
 config.http = {
+  apiPrefix: "/api",
   configure: express.configure
 };
 
