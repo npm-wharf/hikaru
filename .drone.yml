@@ -8,10 +8,12 @@ pipeline:
   #   restore: true
   #   mount:
   #     - ./node_modules
-  # build:
-  #   image: arobson/alpine-node
-  #   commands:
-  #     - mocha spec/
+  build:
+    image: arobson/alpine-node
+    commands:
+      - npm install
+      - npm install buildgoggles -g
+      - buildgoggles
   # build-cache:
   #   image: arobson/drone-sftp-cache
   #   debug: true

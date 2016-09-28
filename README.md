@@ -15,6 +15,7 @@ Responds with a list of deployments which will receive rolling update calls with
 All configruation is driven by environment variables:
 
  * `K8S-URL`
+ * `K8S-HOST`
  * `K8S-TOKEN`
  * `K8S-CA`
  * `K8S-CERT`
