@@ -1,0 +1,35 @@
+{
+  "name": "hikaru",
+  "version": "1.0.0",
+  "description": "A continuous deployment service helper for kubernetes",
+  "main": "src/index.js",
+  "dependencies": {
+    "body-parser": "^1.15.2",
+    "deftly": "^1.0.0",
+    "deftly-express": "^1.0.2",
+    "dot-env": "0.0.1",
+    "fount": "^0.2.0-3",
+    "kubernetes-client": "^2.1.1",
+    "lodash": "^4.16.2",
+    "when": "^3.7.7"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/arobson/hikaru.git"
+  },
+  "keywords": [
+    "kubernetes",
+    "continuous",
+    "deployment"
+  ],
+  "author": "Alex Robson",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/arobson/hikaru/issues"
+  },
+  "homepage": "https://github.com/arobson/hikaru#readme"
+}

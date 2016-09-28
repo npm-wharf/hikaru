@@ -1,0 +1,31 @@
+pipeline:
+  # cache:
+  #   image: arobson/drone-sftp-cache
+  #   debug: true
+  #   username: drone
+  #   password: drone
+  #   path: ./
+  #   restore: true
+  #   mount:
+  #     - ./node_modules
+  # build:
+  #   image: arobson/alpine-node
+  #   commands:
+  #     - mocha spec/
+  # build-cache:
+  #   image: arobson/drone-sftp-cache
+  #   debug: true
+  #   username: drone
+  #   password: drone
+  #   path: ./
+  #   rebuild: true
+  #   mount:
+  #     - ./node_modules
+  docker:
+    image: arobson/drone-docker
+    pull: true
+    repo: arobson/hikaru
+    privileged: true
+    when:
+      branch:
+        - master
