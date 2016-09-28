@@ -1,12 +1,12 @@
 require( "dot-env" );
-const URL = "K8S-URL";
-const HOST = "K8S-HOST";
-const TOKEN = "K8S-TOKEN";
-const CA = "K8S-CA";
-const CERT = "K8S-CERT";
-const KEY = "K8S-KEY";
-const USERNAME = "K8S-USERNAME";
-const PASSWORD = "K8S-PASSWORD";
+const URL = "K8S_URL";
+const HOST = "K8S_HOST";
+const TOKEN = "K8S_TOKEN";
+const CA = "K8S_CA";
+const CERT = "K8S_CERT";
+const KEY = "K8S_KEY";
+const USERNAME = "K8S_USERNAME";
+const PASSWORD = "K8S_PASSWORD";
 
 module.exports = function() {
   let url = process.env[ URL ];
