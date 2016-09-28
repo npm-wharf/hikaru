@@ -6,10 +6,14 @@ Performs rolling upgrade to existing deployments based on matches between the la
 
 ## API
 
-### `POST /api/{dockerImage}`
+### `POST /api/image/{dockerImage}`
 
 Responds with a list of deployments which will receive rolling update calls with the new Docker image.
 
+### `GET /api/image/{repository}/{image}
+### `GET /api/image/{registry}/{repository}/{image}
+
+Responds with a list of namespace and services presently using the image. Useful to see which services would be updated given a docker image
 
 ## Environment Variables
 All configruation is driven by environment variables:

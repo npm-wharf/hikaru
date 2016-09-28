@@ -4,7 +4,7 @@ module.exports = function( k8 ) {
     actions: {
       services: {
         method: "GET",
-        url: ":registry/:repo/:image",
+        url: [ ":registry/:repo/:image", ":repo/:image" ],
         handle: ( env ) => {
           return k8.getServicesByImage( env.data.image )
             .then( ( result ) => {
@@ -14,6 +14,7 @@ module.exports = function( k8 ) {
       },
       update: {
         method: "POST",
+        url: "",
         handle: ( env ) => {
           return k8.update( env.image )
             .then( ( result ) => {
