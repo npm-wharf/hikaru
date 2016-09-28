@@ -119,7 +119,7 @@ function updateService( client, dockerImage ) {
       return when.all( updates );
     } )
     .then( ( sets ) => {
-      return _.map( sets, ( set ) => {
+      let setPromises = _.map( sets, ( set ) => {
         if( set.services.length ) {
           let pending = _.map( set.services, ( service ) => {
             return updateServiceToImage( client, set.namespace, service, dockerImage );
@@ -129,9 +129,14 @@ function updateService( client, dockerImage ) {
               return set;
             } );
         } else {
-          return when( [] );
+          return when.resolve();
         }
       } );
+
+      return when.all( setPromises )
+        .then( () => {
+          return _.filter( sets, ( set ) => set.services.length );
+        } );
     } );
 }
 

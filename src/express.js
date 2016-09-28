@@ -7,8 +7,9 @@ function configure( state ) {
   const app = state.express;
 
   app.use( infoHeaders );
-  app.use( "/", bodyParser.json() );
-  app.use( "/", bodyParser.json( { type: "application/vnd.api+json" } ) );
+  app.use( bodyParser.json() );
+  app.use( bodyParser.json( { type: "application/*+json" } ) );
+
   return when.resolve();
 }
 

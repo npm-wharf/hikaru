@@ -10,7 +10,7 @@ const PASSWORD = "K8S-PASSWORD";
 
 module.exports = function() {
   let url = process.env[ URL ];
-  if( url ) {
+  if( !url ) {
     url = `https://${ process.env[ HOST ] }`
   }
   return {
