@@ -9,6 +9,8 @@ function configure( state ) {
   app.use( infoHeaders );
   app.use( bodyParser.json() );
   app.use( bodyParser.json( { type: "application/*+json" } ) );
+  app.use( bodyParser.text( { type: "application/yaml" } ) );
+  app.use( bodyParser.text( { type: "application/yml" } ) );
 
   return when.resolve();
 }

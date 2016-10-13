@@ -2,13 +2,21 @@ const _ = require( "lodash" );
 const when = require( "when" );
 const K8Api = require( "kubernetes-client" );
 
-function createJob( client, namespace, jobSpec ) {
+function createJob( client, jobSpec ) {
   return when.promise( ( res, rej ) => {
+    let namespace = jobSpec.metadata.namespace || "default";
+    jobSpec.apiVersion = "extensions/v1beta1";
+    jobSpec.spec.autoSelector = true;
+    let templateMeta = jobSpec.spec.template.metadata;
+    if( !templateMeta.labels || _.keys( templateMeta ).length === 0 ) {
+      templateMeta.labels = {
+        "job-name": jobSpec.metadata.name
+      };
+    }
     client.ext.ns( namespace )
-      .job.create( jobSpec, ( err, result ) => {
+      .job.post( { body: jobSpec }, ( err, result ) => {
         if( err ) {
           console.log( "error creating job" );
-          console.log( JSON.stringify( err, null, 2 ) );
           rej( err );
         } else {
           res( result );

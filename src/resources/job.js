@@ -24,50 +24,31 @@ module.exports = function( k8 ) {
       schedule: {
         method: "POST",
         url: "",
-        middleware: [
-          ( env, next ) => {
-            env.type = types[ env.headers[ "Content-Type" ] ];
-            next();
-          }
-        ],
-        handle: [
-          {
-            when: { type: "json" },
-            handle: ( env ) => {
-              try {
-                return k8.createJob( env.data.body )
-                  .then( ( result ) => {
-                    return { data: result };
-                  } );
-              } catch( ex ) {
-                return { status: 400, data: "invalid job specification submitted" };
-              }
-            }
-          },
-          {
-            when: { type: "yaml" },
-            handle: ( env ) => {
-              try {
-                let job = yaml.safeLoad( env.data.body );
-                return k8.createJob( job )
-                  .then( ( result ) => {
-                    return { data: result };
-                  } );
-              } catch( ex ) {
-                return { status: 400, data: "invalid job specification submitted" };
-              }
+        handle: ( env ) => {
+          let type = types[ env.headers[ "content-type" ] ];
+          let job = env.data;
+          if( type === "yaml" || type === "yml" ) {
+            try {
+              job = yaml.safeLoad( env.data );
+            } catch( ex ) {
+              return { status: 400, data: "invalid job specification submitted" };
             }
           }
-        ]
+          return k8.createJob( job )
+            .then( ( result ) => {
+              return { data: result };
+            } );
+        }
       },
       status: {
         method: "GET",
         url: ":namespace/:jobName",
         handle: ( env ) => {
           return k8.getJobStatus( env.data.namespace, env.data.jobName )
-            .then( ( result ) => {
-              return { data: result };
-            } );
+            .then( 
+              ( result ) => { return { data: result }; },
+              ( err ) => { return { status: 404, data: `job ${env.data.jobName} not found in namespace ${env.data.namespace}` } }
+            );
         }
       },
       stop: {
@@ -75,9 +56,10 @@ module.exports = function( k8 ) {
         url: ":namespace/:jobName",
         handle: ( env ) => {
           return k8.deleteJob( env.data.namespace, env.data.jobName )
-            .then( ( result ) => {
-              return { data: result };
-            } );
+            .then( 
+              ( result ) => { return { data: result }; },
+              ( err ) => { return { status: 404, data: `job ${env.data.jobName} not found in namespace ${env.data.namespace}` } }
+            );
         }
       },
     }
