@@ -1,147 +1,170 @@
-const _ = require( "lodash" );
-const when = require( "when" );
-const K8Api = require( "kubernetes-client" );
+const _ = require('lodash')
+const connection = require('./connection')
+const parse = require('./imageParser').parse
 
-function createJob( client, jobSpec ) {
-  return when.promise( ( res, rej ) => {
-    let namespace = jobSpec.metadata.namespace || "default";
-    jobSpec.apiVersion = "extensions/v1beta1";
-    jobSpec.spec.autoSelector = true;
-    let templateMeta = jobSpec.spec.template.metadata;
-    if( !templateMeta.labels || _.keys( templateMeta ).length === 0 ) {
+function createJob (client, jobSpec) {
+  return new Promise((resolve, reject) => {
+    const namespace = jobSpec.metadata.namespace || 'default'
+    jobSpec.apiVersion = 'extensions/v1beta1'
+    jobSpec.spec.autoSelector = true
+    const templateMeta = jobSpec.spec.template.metadata
+    if (!templateMeta.labels || _.keys(templateMeta).length === 0) {
       templateMeta.labels = {
-        "job-name": jobSpec.metadata.name
-      };
-    }
-    client.ext.ns( namespace )
-      .job.post( { body: jobSpec }, ( err, result ) => {
-        if( err ) {
-          console.log( "error creating job" );
-          rej( err );
-        } else {
-          res( result );
-        }
-      } );
-  } );
-}
-
-function deleteJob( client, namespace, jobName ) {
-  return when.promise( ( res, rej ) => {
-    client.ext.ns( namespace )
-      .job.delete( jobName, ( err, result ) => {
-        if( err ) {
-          rej( err );
-        } else {
-          res( result );
-        }
-      } );
-  } );
-}
-
-function getClient( config ) {
-  return new K8Api.Core( {
-    url: config.url,
-    auth: {
-      user: config.username,
-      pass: config.password
-    }
-  } );
-}
-
-function getExtClient( config ) {
-  return new K8Api.Extensions( {
-    url: config.url,
-    auth: {
-      user: config.username,
-      pass: config.password
-    }
-  } );
-}
-
-function getJobStatus( client, namespace, jobName ) {
-  return when.promise( ( res, rej ) => {
-    client.ext.ns( namespace )
-      .job.get( jobName, ( err, result ) => {
-        if( err ) {
-          rej( err );
-        } else {
-          res( result.status );
-        }
-      } );
-  } );
-}
-
-function getNamespaces( client ) {
-  return when.promise( ( res, rej ) => {
-    client.core.namespaces.get( ( err, list ) => {
-      if( err ) {
-        rej( err );
-      } else {
-        res( _.map( list.items, ( item ) => {
-            return item.metadata.name;
-        } ) );
+        'job-name': jobSpec.metadata.name
       }
-    } );
-  } );
-}
-
-function getServicesByLabels( client, namespace, query ) {
-  return when.promise( ( res, rej ) => {
-    client.ext.ns( namespace ).deployments.matchLabels( query )
-      .get( ( err, list ) => {
-        if( err ) {
-          rej( err );
+    }
+    client.ext.ns(namespace)
+      .job.post({ body: jobSpec }, (err, result) => {
+        if (err) {
+          console.log('error creating job')
+          reject(err)
         } else {
-          let deployments = _.map( list.items, ( deployment ) => {
-            return deployment.metadata.name;
-          } );
-          res( { namespace, services: deployments } );
+          resolve(result)
         }
-      } );
-    } );
+      })
+  })
 }
 
-function getServicesByImage( client, dockerImage ) {
-  let [ image, tag ] = dockerImage.split( ":" );
-  let [ owner, repo, branch, version, build, slug ] = tag.split( "_" );
-  let query = {
-    owner: owner,
-    repo: repo.replace( ".git", "" ),
-    branch: branch
-  };
-  return getNamespaces( client )
-    .then( ( namespaces ) => {
-      let updates = _.map( namespaces, ( namespace ) => {
-        return getServicesByLabels( client, namespace, query );
-      } );
-      return when.all( updates )
-        .then( ( list ) => {
-          return _.filter( list, ( l ) => l.services.length );
-        } );
-    } );
-}
-
-function listJobs( client, namespace ) {
-  return when.promise( ( res, rej ) => {
-    client.ext.ns( namespace )
-      .job.get( ( err, result ) => {
-        if( err ) {
-          rej( err );
+function deleteJob (client, namespace, jobName) {
+  return new Promise((resolve, reject) => {
+    client.ext.ns(namespace)
+      .job.delete(jobName, (err, result) => {
+        if (err) {
+          reject(err)
         } else {
-          res( result );
+          resolve(result)
         }
-      } );
-  } );
+      })
+  })
 }
 
-function updateServiceToImage( client, namespace, name, image ) {
-  let update = { 
+function getImageSpecFromDeployment(deployment, image) {
+  const containers = deployment.spec.template.spec.containers
+  if (containers.length === 1) {
+    return containers[0].image
+  } else if (image) {
+    const container = _.find(containers, c => c.image.indexOf(image) === 0)
+    return container.image
+  } else {
+    return containers[0].image
+  }
+}
+
+function getJobStatus (client, namespace, jobName) {
+  return new Promise((resolve, reject) => {
+    client.ext.ns(namespace)
+      .job.get(jobName, (err, result) => {
+        if (err) {
+          reject(err)
+        } else {
+          resolve(result.status)
+        }
+      })
+  })
+}
+
+function getNamespaces (client) {
+  return new Promise((resolve, reject) => {
+    client.core.namespaces.get((err, list) => {
+      if (err) {
+        reject(err)
+      } else {
+        resolve(_.map(list.items, item => {
+          return item.metadata.name
+        }))
+      }
+    })
+  })
+}
+
+function getServiceDetail (client, namespace, serviceName) {
+  return new Promise((resolve, reject) => {
+    client.ext.ns(namespace).deployment(serviceName)
+      .get((err, result) => {
+        if (err) {
+          reject(err)
+        } else {
+          resolve(result)
+        }
+      })
+  })
+}
+
+function getServicesByNamespace (client, namespace) {
+  return new Promise((resolve, reject) => {
+    client.ext.ns(namespace).deployments
+      .get((err, list) => {
+        if (err) {
+          reject(err)
+        } else {
+          let deployments = _.map(list.items, deployment => {
+            return {
+              service: deployment.metadata.name,
+              image:
+            }
+          })
+          resolve({ namespace, services: deployments })
+        }
+      })
+  })
+}
+
+function getServicesByLabels (client, namespace, query) {
+  return new Promise((resolve, reject) => {
+    client.ext.ns(namespace).deployments.matchLabels(query)
+      .get((err, list) => {
+        if (err) {
+          reject(err)
+        } else {
+          let deployments = _.map(list.items, deployment => {
+            return deployment.metadata.name
+          })
+          resolve({ namespace, services: deployments })
+        }
+      })
+  })
+}
+
+function getServicesByImage (client, dockerImage) {
+  const info = parse(dockerImage)
+  const query = {
+    owner: info.owner,
+    repo: info.repo,
+    branch: info.branch
+  }
+  return getNamespaces(client)
+    .then(namespaces => {
+      const updates = _.map(namespaces, namespace => {
+        return getServicesByLabels(client, namespace, query)
+      })
+      return Promise.all(updates)
+        .then(list => {
+          return _.filter(list, l => l.services.length)
+        })
+    })
+}
+
+function listJobs (client, namespace) {
+  return new Promise((resolve, reject) => {
+    client.ext.ns(namespace)
+      .job.get((err, result) => {
+        if (err) {
+          reject(err)
+        } else {
+          result(result)
+        }
+      })
+  })
+}
+
+function updateServiceToImage (client, namespace, name, image) {
+  const update = {
     name: name,
     body: {
       spec: {
         template: {
           spec: {
-            containers: [ 
+            containers: [
               {
                 name: name,
                 image: image
@@ -151,50 +174,52 @@ function updateServiceToImage( client, namespace, name, image ) {
         }
       }
     }
-  };
-  return when.promise( ( res, rej ) => {
-    client.ext.ns( namespace ).deployments.patch( update, ( err, result ) => {
-      if( err ) {
-        console.log( "upgrade failed", err );
-        rej( err );
+  }
+  return new Promise((resolve, reject) => {
+    client.ext.ns(namespace).deployments.patch(update, (err, result) => {
+      if (err) {
+        console.log('upgrade failed', err)
+        reject(err)
       } else {
-        console.log( "upgrade started" );
-        res( result );
+        console.log('upgrade started')
+        result(result)
       }
-    } );
-  } );
+    })
+  })
 }
 
-function updateNamespace( client, dockerImage, set ) {
-  let pending = _.map( set.services, ( service ) => {
-    return updateServiceToImage( client, set.namespace, service, dockerImage );
-  } );
-  return when.all( pending ).then( () => set );
+function updateNamespace (client, dockerImage, set) {
+  const pending = _.map(set.services, service => {
+    return updateServiceToImage(client, set.namespace, service, dockerImage)
+  })
+  return Promise.all(pending).then(() => set)
 }
 
-function updateService( client, dockerImage ) {
-  return getServicesByImage( client, dockerImage )
-    .then( ( sets ) => {
-      let setPromises = _.map( sets, updateNamespace.bind( null, client, dockerImage ) );
-      return when.all( setPromises );
-    } );
+function updateService (client, dockerImage) {
+  return getServicesByImage(client, dockerImage)
+    .then((sets) => {
+      const setPromises = _.map(sets, updateNamespace.bind(null, client, dockerImage))
+      return Promise.all(setPromises)
+    })
 }
 
-module.exports = function( config ) {
+module.exports = function (config) {
   const client = {
-    core: getClient( config ),
-    ext: getExtClient( config )
-  };
+    core: connection.getCoreClient(config),
+    ext: connection.getExtensionClient(config)
+  }
 
   return {
     client: client,
-    createJob: createJob.bind( null, client ),
-    deleteJob: deleteJob.bind( null, client ),
-    getJobStatus: getJobStatus.bind( null, client ),
-    getNamespaces: getNamespaces.bind( null, client ),
-    getServicesByImage: getServicesByImage.bind( null, client ),
-    getServicesByLabels: getServicesByLabels.bind( null, client ),
-    listJobs: listJobs.bind( null, client ),
-    update: updateService.bind( null, client )
-  };
+    createJob: createJob.bind(null, client),
+    deleteJob: deleteJob.bind(null, client),
+    getJobStatus: getJobStatus.bind(null, client),
+    getNamespaces: getNamespaces.bind(null, client),
+    getServiceDetail: getServiceDetail.bind(null, client),
+    getServicesByImage: getServicesByImage.bind(null, client),
+    getServicesByLabels: getServicesByLabels.bind(null, client),
+    getServicesByNamespace: getServicesByNamespace.bind(null, client),
+    listJobs: listJobs.bind(null, client),
+    update: updateService.bind(null, client)
+  }
 }

@@ -1,4 +1,6 @@
 Dockerfile
 .git/
 .gitignore
+node_modules
 spec/
+package-lock.json

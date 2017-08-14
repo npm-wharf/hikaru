@@ -2,3 +2,5 @@
 node_modules/
 .DT_Store
 init.js
+package-lock.json
+.nyc_output/

@@ -5,17 +5,34 @@
   "main": "src/index.js",
   "dependencies": {
     "body-parser": "^1.15.2",
-    "deftly": "^1.0.0",
-    "deftly-express": "^1.0.2",
+    "bole": "^3.0.2",
+    "deftly": "1.1.x",
+    "deftly-express": "1.1.x",
     "dot-env": "0.0.1",
-    "fount": "^0.2.0-3",
-    "js-yaml": "^3.6.1",
-    "kubernetes-client": "^2.2.0",
+    "fount": "1.1.x",
+    "js-yaml": "^3.9.0",
+    "kubernetes-client": "^3.12.0",
     "lodash": "^4.16.2",
-    "when": "^3.7.7"
+    "semver": "^5.4.1"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "chai": "^4.1.0",
+    "chai-as-promised": "^7.1.1",
+    "coveralls": "^2.13.1",
+    "mocha": "^3.4.2",
+    "mocha-lcov-reporter": "^1.3.0",
+    "nyc": "^11.0.3",
+    "sinon": "^2.3.8",
+    "sinon-chai": "^2.12.0",
+    "standard": "^10.0.2"
+  },
   "scripts": {
+    "pretest": "standard",
+    "test": "node_modules/mocha/bin/mocha spec/*.spec.js",
+    "coverage": "nyc npm test",
+    "continuous": "./node_modules/mocha/bin/mocha spec/*.spec.js -w",
+    "release": "standard-version",
+    "standard": "standard --fix"
   },
   "repository": {
     "type": "git",
@@ -31,5 +48,10 @@
   "bugs": {
     "url": "https://github.com/arobson/hikaru/issues"
   },
-  "homepage": "https://github.com/arobson/hikaru#readme"
+  "homepage": "https://github.com/arobson/hikaru#readme",
+  "standard": {
+    "env": [
+      "mocha"
+    ]
+  }
 }

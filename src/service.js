@@ -1,14 +1,14 @@
-const deftly = require( "deftly" );
+const deftly = require('deftly')
 
-function start( config ) {
+function start (config) {
   return deftly
-    .init( config )
-    .then( ( service ) => {
+    .init(config)
+    .then((service) => {
       service.start()
-      return service;
-    } );
+      return service
+    })
 }
 
 module.exports = {
   start: start
-};
+}
