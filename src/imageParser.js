@@ -1,6 +1,7 @@
 const _ = require('lodash')
 const SHA_REGEX = /_[a-f0-9]{8}/
 const SEMVER_REGEX = /_[0-9]+[.][0-9]+[.][0-9]+/
+const REFINED_VERSION = /^[v]?(([0-9]+)([.][0-9]+)?([.][0-9]+)?([-]([a-zA-Z.0-9]+))?)$/
 const BUILD_NUMBER_REGEX = /_[0-9]+/
 
 function parseImage (image) {
@@ -100,22 +101,41 @@ function parse (fullImage) {
   const [ image, tag ] = fullImage.split(':')
   const [ repoOwner, imageName ] = parseImage(image)
   const [ a, b, c, d, e, f ] = parseTag(tag, repoOwner, imageName)
+  const versions = refineVersion(d)
   return {
-    image: {
-      name: imageName,
-      owner: repoOwner
-    },
+    imageName: imageName,
+    imageOwner: repoOwner,
     owner: a,
     repo: b,
     branch: c,
-    version: d,
+    fullVersion: versions.full,
+    version: versions.refined,
+    prerelease: versions.pre,
     build: e,
     commit: f
+  }
+}
+
+function refineVersion (version) {
+  const match = REFINED_VERSION.exec(version)
+  if (match) {
+    return {
+      full: version,
+      refined: match[1],
+      pre: match.length >= 7 ? match[6] : null
+    }
+  } else {
+    return {
+      full: version,
+      refined: version,
+      pre: null
+    }
   }
 }
 
 module.exports = {
   parse: parse,
   parseImage: parseImage,
-  parseTag: parseTag
+  parseTag: parseTag,
+  refineVersion: refineVersion
 }

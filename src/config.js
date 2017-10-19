@@ -14,7 +14,7 @@ function readIfFile (value) {
   if (!value) return
   const filePath = path.resolve(value)
   if (fs.existsSync(filePath)) {
-    return fs.readFileSync(filePath)
+    return fs.readFileSync(filePath, 'utf8')
   }
   return value
 }
@@ -30,13 +30,12 @@ module.exports = function () {
     username: process.env[ USERNAME ],
     password: process.env[ PASSWORD ],
     token: process.env[ TOKEN ],
+    caFile: process.env[ CA ],
+    certFile: process.env[ CERT ],
+    keyFile: process.env[ KEY ],
     ca: readIfFile(process.env[ CA ]),
     cert: readIfFile(process.env[ CERT ]),
     key: readIfFile(process.env[ KEY ]),
-    transports: [ 'deftly-express' ],
-    resources: [ './src/resources/*.js' ],
-    plugins: [ './src/plugins/*.js' ],
-    middleware: [ './src/middleware/*.js' ],
     logging: {
       level: 4
     }

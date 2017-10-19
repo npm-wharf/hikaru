@@ -3,17 +3,22 @@
   "version": "1.1.0",
   "description": "A continuous deployment service and integration helper for kubernetes",
   "main": "src/index.js",
+  "bin": {
+    "hikaru": "./bin/hikaru.js"
+  },
   "dependencies": {
-    "body-parser": "^1.15.2",
+    "auto-kubernetes-client": "^0.4.3",
+    "bluebird": "^3.5.1",
     "bole": "^3.0.2",
-    "deftly": "1.1.x",
-    "deftly-express": "1.1.x",
+    "chalk": "^2.1.0",
     "dot-env": "0.0.1",
     "fount": "1.1.x",
     "js-yaml": "^3.9.0",
-    "kubernetes-client": "^3.12.0",
+    "json-stream": "^1.0.0",
     "lodash": "^4.16.2",
-    "semver": "^5.4.1"
+    "mcgonagall": "file:../mcgonagall",
+    "semver": "^5.4.1",
+    "yargs": "^9.0.1"
   },
   "devDependencies": {
     "chai": "^4.1.0",
@@ -40,7 +45,6 @@
   },
   "keywords": [
     "kubernetes",
-    "continuous",
     "deployment"
   ],
   "author": "Alex Robson",

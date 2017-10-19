@@ -1,0 +1,20 @@
+name = "proxy.infra"
+image = "nginx:1.13-alpine"
+loadbalance = true
+
+[scale]
+  containers = 2
+  ram = "> 50 Mi < 200 Mi"
+  cpu = "> 10% < 20%"
+
+[ports]
+  http = "80"
+  https = "443"
+
+[mounts]
+  config-files = "/etc/nginx"
+  cert-files = "/etc/nginx/cert"
+
+[volumes]
+  config-files = "nginx-files::nginx.conf,mime.types"
+  cert-files = "secret::ssl"

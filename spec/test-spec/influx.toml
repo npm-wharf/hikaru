@@ -1,0 +1,21 @@
+name = "influxdb.data"
+stateful = true
+serviceAlias = "influx"
+image = "influxdb:1.3-alpine"
+
+[scale]
+  containers = 1
+  ram = "> 50 Mi < 200 Mi"
+  cpu = "> 10% < 20%"
+
+[env]
+  INFLUXDB_GRAPHITE_ENABLED = "false"
+
+[ports]
+  http = "8086"
+
+[mounts]
+  influx-data = "/var/lib/influxdb"
+
+[storage]
+  influx-data = "20Gi:exclusive"

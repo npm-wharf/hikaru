@@ -1,0 +1,27 @@
+name = "create-cert.infra"
+image = "arobson/k8s-certbot:latest"
+command = "/bin/ash -c ./create-cert.sh"
+job = true
+
+[scale]
+  containers = 1
+  ram = "> 50 Mi < 200 Mi"
+  cpu = "> 10% < 20%"
+
+[env]
+  DOMAINS = "hikaru.ngrok.io"
+  EMAIL = "asrobson@gmail.com"
+  NAMESPACE = "infra"
+  SECRET = "ssl"
+  COUNTRY = "US"
+  STATE = "Tennessee"
+  LOCAL = "Murfreesboro"
+  ORGANIZATION = "OSS"
+  UNIT = "Software"
+  FQN = "hikaru.ngrok.io"
+
+[deployment]
+  history = 2
+  backoff = 4
+  timeLimit = 240
+  pull = "Always"

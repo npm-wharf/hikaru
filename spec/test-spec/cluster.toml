@@ -1,0 +1,32 @@
+[kube-system.heapster]
+  order = 0
+  [kube-system.heapster.scale]
+    small = "+0"
+    medium = "+1"
+    large = "+2"
+
+[infra.create-cert]
+  order = 0
+
+[data.chronograf]
+  order = 1
+  [data.chronograf.scale]
+    small = "+0"
+[data.influxdb]
+  order = 1
+  [data.influxdb.scale]
+    small = "+0"
+[data.kapacitor]
+  order = 1
+  [data.kapacitor.scale]
+    small = "+0"
+
+[infra.proxy]
+  order = 2
+  [infra.proxy.scale]
+    small = "+0"
+    medium = "+1"
+    large = "+2"
+
+[infra.certbot]
+  order = 3
