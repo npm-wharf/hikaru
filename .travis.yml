@@ -7,7 +7,7 @@ script:
   - nyc npm test && nyc report --reporter=text-lcov | coveralls
 
 node_js:
-  - "6"
+  - "8"
 
 after_success:
   - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
