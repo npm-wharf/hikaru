@@ -59,12 +59,12 @@ By default, hikaru will upgrade images if the version or build is newer and the 
 * `repo`
 * `branch`
 
-The following labels act like additional filters that hikaru will use against the image metadata it determines from the tag. If these labels are present under the manifest's `spec.metadata.labels` then they will be used to determine whether a new image is compatible with the manifest.
+The following labels act like additional filters that hikaru will use against the image metadata it determines from the tag. If these labels are present under the manifest's `spec.template.metadata.labels` then they will be used to determine whether a new image is compatible with the manifest.
 
 This allows you to filter out builds from owners, branches, etc. that you don't want hikaru to deploy over a certain environment/manifest:
  
  * `owner` - limit deployments to a specific repo owner
- * `owner` - limit deployments to a specific repo
+ * `repo` - limit deployments to a specific repo
  * `branch` - limit deployments to a specific branch
  * `version` - limit to new builds of a specific version
  * `commit` - **!caution!** locks the deployment to a specific commit

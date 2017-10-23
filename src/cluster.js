@@ -6,6 +6,7 @@ const parse = require('./imageParser').parse
 const compare = require('./imageComparer').compare
 
 const RESERVED_NAMESPACES = ['default', 'kube-system', 'kube-public']
+const MATCH_KEYS = ['imageOwner', 'imageName', 'owner', 'repo', 'branch' ]
 
 function createAccount (k8s, resources) {
   let accountPromise
@@ -232,7 +233,7 @@ function findResourcesByImage (k8s, image) {
 
 function findResourcesByMetadata (k8s, metadata) {
   let testResource = (list, resource) => {
-    if (match(resource.metadata, metadata)) {
+    if (match(resource.metadata, metadata, resource.labels)) {
       list.push(resource)
     }
   }
@@ -350,10 +351,16 @@ function getUpgradeCandidates (k8s, image, options = {filter: ['imageName', 'ima
     )
 }
 
-function match (target, props) {
-  const keys = Object.keys(props)
+function match (target, props, options = {}) {
+  let keys = options.filter
+    ? options.filter.split(',').map(x => x.trim())
+    : MATCH_KEYS
+  keys = keys.concat(_.without(Object.keys(options), 'filter'))
   return keys.reduce((matches, key) => {
     if (props[key] !== target[key]) {
+      matches = false
+    }
+    if (options[key] && options[key] !== target[key]) {
       matches = false
     }
     return matches
@@ -593,6 +600,7 @@ module.exports = function (k8s) {
     getImageMetadata: getImageMetadata.bind(null, k8s),
     getImageMetadataForNamespace: getImageMetadataForNamespace.bind(null, k8s),
     getUpgradeCandidates: getUpgradeCandidates.bind(null, k8s),
+    match: match,
     removeCluster: removeCluster.bind(null, k8s),
     removeContainer: removeContainer.bind(null, k8s),
     upgradeResources: upgradeResources.bind(null, k8s),

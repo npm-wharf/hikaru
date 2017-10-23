@@ -3,4 +3,6 @@ Dockerfile
 .gitignore
 node_modules
 spec/
+coverage/
+.nyc_output/
 package-lock.json

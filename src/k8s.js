@@ -894,7 +894,10 @@ function getDaemonSetsByNamespace (client, namespace, baseImage) {
                 service: spec.metadata.name,
                 image: container.image,
                 container: container.name,
-                metadata: metadata
+                metadata: metadata,
+                labels: spec.template.metadata
+                  ? spec.template.metadata.labels
+                  : {}
               })
             })
             return acc
@@ -918,7 +921,10 @@ function getDeploymentsByNamespace (client, namespace, baseImage) {
                 service: spec.metadata.name,
                 image: container.image,
                 container: container.name,
-                metadata: metadata
+                metadata: metadata,
+                labels: spec.template.metadata
+                  ? spec.template.metadata.labels
+                  : {}
               })
             })
             return acc
@@ -963,7 +969,10 @@ function getStatefulSetsByNamespace (client, namespace, baseImage) {
                 service: spec.metadata.name,
                 image: container.image,
                 container: container.name,
-                metadata: metadata
+                metadata: metadata,
+                labels: spec.template.metadata
+                  ? spec.template.metadata.labels
+                  : {}
               })
             })
             return acc

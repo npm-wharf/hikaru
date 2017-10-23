@@ -5,4 +5,4 @@ RUN mkdir /app
 WORKDIR /app
 COPY . .
 
-CMD [ "node", "./src" ]
+CMD [ "node", "./src/server" ]
