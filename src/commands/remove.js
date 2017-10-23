@@ -1,4 +1,5 @@
 const bole = require('bole')
+const inquire = require('./inquire')
 
 function build (config) {
   return {
@@ -37,14 +38,7 @@ function build (config) {
     debug: {
       alias: 'd',
       describe: 'show debug output in logging',
-      default: false,
-      boolean: true
-    },
-    saveDiffs: {
-      alias: 's',
-      describe: 'if deploying a cluster over an existing one, save any differences that exist between existing resources and deployed ones in a `./diff` folder',
-      default: false,
-      boolean: true
+      default: false
     }
   }
 }
@@ -71,24 +65,43 @@ function handle (config, hikaru, readFile, debugOut, argv) {
   if (argv.url) {
     config.url = argv.url
   }
-  config.saveDiffs = argv.saveDiffs
+  const options = {}
+
+  if (argv.tokenFile) {
+    options.data = inquire.loadTokens(argv.tokenFile)
+  }
 
   bole.output({
     level: argv.debug ? 'debug' : 'info',
     stream: debugOut
   })
 
-  hikaru.deployCluster(argv.source)
+  hikaru.removeCluster(argv.source, options)
     .then(
       () => console.log('done'),
-      err => console.log('error', err)
+      err => {
+        if (err.tokens) {
+          console.log(`${err.tokens.length} tokens were found in the specification. When prompted, please provide a value for each.`)
+          inquire.acquireTokens(err.tokens)
+            .then(
+              tokens => {
+                return hikaru.removeCluster(err.specPath, {
+                  data: tokens
+                })
+              }
+            )
+        } else {
+          console.error(`There was a problem in the specification at '${argv.source}'.\n ${err}`)
+          process.exit(100)
+        }
+      }
     )
 }
 
 module.exports = function (config, hikaru, readFile, debugOut) {
   return {
-    command: 'create <source> [options]',
-    desc: 'creates a cluster based on the source specification',
+    command: 'remove <source> [options]',
+    desc: 'removes the source specification from a kubernetes cluster',
     builder: build(config),
     handler: handle.bind(null, config, hikaru, readFile, debugOut)
   }

@@ -15,8 +15,34 @@ describe('Image Parser', function () {
     console.warn = (x) => logs.push(x)
   })
 
+  it('should infer latest when tag is missing', function () {
+    return parser.parse('docker-image')
+      .should.partiallyEql({
+        owner: 'official',
+        repo: 'docker-image',
+        branch: 'master',
+        fullVersion: 'latest',
+        version: 'latest',
+        imageName: 'docker-image',
+        imageOwner: 'official'
+      })
+  })
+
+  it('should leave out defaults when second arg is false', function () {
+    return parser.parse('docker-image', false)
+      .should.partiallyEql({
+        owner: undefined,
+        repo: 'docker-image',
+        branch: undefined,
+        fullVersion: undefined,
+        version: undefined,
+        imageName: 'docker-image',
+        imageOwner: undefined
+      })
+  })
+
   it('should parse latest tag', function () {
-    parser.parse('docker-owner/docker-image:latest')
+    return parser.parse('docker-owner/docker-image:latest')
       .should.partiallyEql({
         owner: 'docker-owner',
         repo: 'docker-image',
@@ -29,7 +55,7 @@ describe('Image Parser', function () {
   })
 
   it('should parse major version tag', function () {
-    parser.parse('docker-owner/docker-image:1')
+    return parser.parse('docker-owner/docker-image:1')
       .should.partiallyEql({
         owner: 'docker-owner',
         repo: 'docker-image',
@@ -42,7 +68,7 @@ describe('Image Parser', function () {
   })
 
   it('should parse major version tag alternates', function () {
-    parser.parse('docker-owner/docker-image:v1')
+    return parser.parse('docker-owner/docker-image:v1')
       .should.partiallyEql({
         owner: 'docker-owner',
         repo: 'docker-image',
@@ -55,7 +81,7 @@ describe('Image Parser', function () {
   })
 
   it('should parse minor verion tag', function () {
-    parser.parse('docker-owner/docker-image:1.1')
+    return parser.parse('docker-owner/docker-image:1.1')
       .should.partiallyEql({
         owner: 'docker-owner',
         repo: 'docker-image',
@@ -68,7 +94,7 @@ describe('Image Parser', function () {
   })
 
   it('should parse full semver tag', function () {
-    parser.parse('docker-owner/docker-image:1.1.1')
+    return parser.parse('docker-owner/docker-image:1.1.1')
       .should.partiallyEql({
         owner: 'docker-owner',
         repo: 'docker-image',
@@ -81,7 +107,7 @@ describe('Image Parser', function () {
   })
 
   it('should parse full spec tag', function () {
-    parser.parse('docker-owner/docker-image:owner-name_repo_branch-name_1.2.3_12_a1b2c3d4')
+    return parser.parse('docker-owner/docker-image:owner-name_repo_branch-name_1.2.3_12_a1b2c3d4')
       .should.partiallyEql({
         owner: 'owner-name',
         repo: 'repo',
@@ -96,7 +122,7 @@ describe('Image Parser', function () {
   })
 
   it('should parse master spec tag', function () {
-    parser.parse('docker-owner/docker-image:1.2.3_a1b2c3d4')
+    return parser.parse('docker-owner/docker-image:1.2.3_a1b2c3d4')
       .should.partiallyEql({
         owner: 'docker-owner',
         repo: 'docker-image',
@@ -110,7 +136,7 @@ describe('Image Parser', function () {
   })
 
   it('should parse branch spec tag', function () {
-    parser.parse('docker-owner/docker-image:branch-name_1.2.3_12_a1b2c3d4')
+    return parser.parse('docker-owner/docker-image:branch-name_1.2.3_12_a1b2c3d4')
       .should.partiallyEql({
         owner: 'docker-owner',
         repo: 'docker-image',
@@ -126,7 +152,7 @@ describe('Image Parser', function () {
 
   it('should attempt to parse tags with additional underscores (no owner or image match)', function () {
     resetLogs()
-    parser.parse('docker-owner/docker-image:branch_name_oh_no_1.2.3_12_a1b2c3d4')
+    const result = parser.parse('docker-owner/docker-image:branch_name_oh_no_1.2.3_12_a1b2c3d4')
       .should.partiallyEql({
         owner: 'docker-owner',
         repo: 'docker-image',
@@ -146,6 +172,7 @@ describe('Image Parser', function () {
       'Looks like this might be a branch name with underscores only.',
       'Assigning \'branch_name_oh_no\' to branch, \'docker-owner\' to owner and \'docker-image\' to the repo. /shrug'
     ])
+    return result
   })
 
   it('should attempt to parse tags with additional underscores (image match)', function () {

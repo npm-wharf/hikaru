@@ -1,4 +1,5 @@
 const bole = require('bole')
+const inquire = require('./inquire')
 
 function build (config) {
   return {
@@ -37,7 +38,18 @@ function build (config) {
     debug: {
       alias: 'd',
       describe: 'show debug output in logging',
-      default: false
+      default: false,
+      boolean: true
+    },
+    saveDiffs: {
+      alias: 's',
+      describe: 'if deploying a cluster over an existing one, save any differences that exist between existing resources and deployed ones in a `./diff` folder',
+      default: false,
+      boolean: true
+    },
+    tokenFile: {
+      alias: 'f',
+      describe: 'supply a key/value file for any tokens in the specification'
     }
   }
 }
@@ -64,23 +76,45 @@ function handle (config, hikaru, readFile, debugOut, argv) {
   if (argv.url) {
     config.url = argv.url
   }
+  config.saveDiffs = argv.saveDiffs
+
+  const options = {}
+
+  if (argv.tokenFile) {
+    options.data = inquire.loadTokens(argv.tokenFile)
+  }
 
   bole.output({
     level: argv.debug ? 'debug' : 'info',
     stream: debugOut
   })
 
-  hikaru.removeCluster(argv.source)
+  hikaru.deployCluster(argv.source, options)
     .then(
       () => console.log('done'),
-      err => console.log('error', err)
+      err => {
+        if (err.tokens) {
+          console.log(`${err.tokens.length} tokens were found in the specification. When prompted, please provide a value for each.`)
+          return inquire.acquireTokens(err.tokens)
+            .then(
+              tokens => {
+                return hikaru.deployCluster(err.specPath, {
+                  data: tokens
+                })
+              }
+            )
+        } else {
+          console.error(`There was a problem in the specification at '${argv.source}'.\n ${err}`)
+          process.exit(100)
+        }
+      }
     )
 }
 
 module.exports = function (config, hikaru, readFile, debugOut) {
   return {
-    command: 'delete <source> [options]',
-    desc: 'deletes a cluster based on the source specification',
+    command: 'deploy <source> [options]',
+    desc: 'deploys the source specification to a kubernetes cluster',
     builder: build(config),
     handler: handle.bind(null, config, hikaru, readFile, debugOut)
   }

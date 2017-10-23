@@ -4,3 +4,8 @@ node_modules/
 init.js
 package-lock.json
 .nyc_output/
+spec.tar
+examples.md
+doc/
+cleanup.sh
+test.js

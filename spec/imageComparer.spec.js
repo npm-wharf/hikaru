@@ -185,6 +185,20 @@ describe('Image Comparer', function () {
     ).should.equal('upgrade')
   })
 
+  it('should detect upgrade on major version vs. minor version match', function () {
+    compare(
+      'docker-owner/docker-image:1',
+      'docker-owner/docker-image:1.2'
+    ).should.equal('upgrade')
+  })
+
+  it('should detect upgrade on major version vs. semantic version match', function () {
+    compare(
+      'docker-owner/docker-image:1',
+      'docker-owner/docker-image:1.2.3'
+    ).should.equal('upgrade')
+  })
+
   it('should detect upgrade on major-minor version match', function () {
     compare(
       'docker-owner/docker-image:1.2',
@@ -258,7 +272,7 @@ describe('Image Comparer', function () {
   it('should detect upgrade on full specification', function () {
     compare(
       'docker-owner/docker-image:owner-name_repo-name_branch-name_1.2.3_8_a1b2c3d4',
-      'docker-owner/docker-image:owner_repo_branch_1.2.3_12_a1b2c3d8'
+      'docker-owner/docker-image:owner-name_repo-name_branch-name_1.2.3_12_a1b2c3d8'
     ).should.equal('upgrade')
   })
 
@@ -272,6 +286,43 @@ describe('Image Comparer', function () {
       'docker-owner/docker-image:1.13-1',
       'docker-owner/docker-image:nonono'
     ).should.equal('invalid version - nonono')
+  })
+
+  it('should ignore mismatches when exclusion filter is supplied', function () {
+    compare(
+      'docker-owner/docker-image:owner-name_repo-name_branch-name_1.2.3_12_a1b2c3d4',
+      'docker-owner/docker-image:other-owner-name_repo-name_branch-name_1.2.4_12_a1b2c3d5',
+      {
+        owner: false
+      }
+    ).should.equal('upgrade')
+
+    compare(
+      'docker-owner/docker-image:branch_1.2.3_12_a1b2c3d4',
+      'docker-owner/docker-image:different-branch_1.2.4_12_a1b2c3d4',
+      {
+        branch: false,
+        commit: false
+      }
+    ).should.equal('upgrade')
+
+    compare(
+      'docker-owner/docker-image:latest',
+      'different-owner/docker-image:latest',
+      {
+        imageOwner: false,
+        owner: false
+      }
+    ).should.equal('upgrade')
+
+    compare(
+      'docker-owner/docker-image:owner-name_repo-name_branch-name_1.2.3_8_a1b2c3d4',
+      'docker-owner/docker-image:branch-name_1.2.3_12_a1b2c3d8',
+      {
+        owner: false,
+        repo: false
+      }
+    ).should.equal('upgrade')
   })
 
   after(function () {

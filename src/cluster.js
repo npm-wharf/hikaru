@@ -210,8 +210,7 @@ function exitOnError () {
 
 function findResourcesByImage (k8s, image) {
   let testResource = (list, resource) => {
-    console.log(`testing ${resource.image} against ${image}`)
-    if (resource.image.indexOf(image) === 0) {
+    if (resource.image.indexOf(image) >= 0) {
       list.push(resource)
     }
   }
@@ -291,7 +290,6 @@ function getImageMetadata (k8s, options) {
     .then(
       namespaces => {
         return Promise.reduce(namespaces, (acc, namespace) => {
-          console.log(`fetching for ${namespace}`)
           return getImageMetadataForNamespace(k8s, namespace, options)
             .then(
               result => {
@@ -299,14 +297,12 @@ function getImageMetadata (k8s, options) {
                 return acc
               },
               err => {
-                console.log(err)
                 log.error(`Failed to get image metadata for namespace '${namespace}:\n\t${err.message}'`)
               }
             )
         }, {})
       },
       err => {
-        console.log(err)
         log.error(`Failed to get image metadata - error while retrieving namespace list:\n\t${err.message}`)
         throw err
       }
@@ -329,9 +325,13 @@ function getImageMetadataForNamespace (k8s, namespace, options = {}) {
 }
 
 function getUpgradeCandidates (k8s, image, options = {filter: ['imageName', 'imageOwner', 'owner', 'repo', 'branch']}) {
-  const sourceMeta = parse(image)
+  if (!options.filter || options.filter.length === 0) {
+    throw new Error(`hikaru was given an upgrade command with image '${image} and no filter which would result in forcing all resources to the same image. This command would certainly destroy the cluster and is refused.`)
+  }
+  const sourceMeta = parse(image, false)
   let filter = _.pick(sourceMeta, options.filter)
   filter = _.pickBy(filter, _.identity)
+  log.info(`identifying candidates for ${image} with filter fields '[${options.filter.join(', ')}]' for resources matching: ${JSON.stringify(filter)}`)
   return findResourcesByMetadata(k8s, filter)
     .then(
       list => {
@@ -566,6 +566,7 @@ function upgradeResource (k8s, metadata) {
 
 module.exports = function (k8s) {
   return {
+    k8s: k8s,
     createAccount: createAccount.bind(null, k8s),
     createConfiguration: createConfiguration.bind(null, k8s),
     createContainer: createContainer.bind(null, k8s),

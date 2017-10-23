@@ -32,8 +32,8 @@ const debugOut = {
 
 require('yargs') // eslint-disable-line no-unused-expressions
   .usage('$0 <command> [options]')
-  .command(require('../src/command/create')(config, hikaru, readFile, debugOut))
-  .command(require('../src/command/delete')(config, hikaru, readFile, debugOut))
+  .command(require('../src/commands/deploy')(config, hikaru, readFile, debugOut))
+  .command(require('../src/commands/remove')(config, hikaru, readFile, debugOut))
   .demandCommand(1, 'The command?')
   .help()
   .version()

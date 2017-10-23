@@ -1,27 +1,35 @@
 const semver = require('semver')
 const parse = require('../src/imageParser').parse
 const ZEROS = [0, 0, 0]
+const DEFAULT_FILTER = {
+  imageOwner: true,
+  imageName: true,
+  owner: true,
+  branch: true,
+  commit: true
+}
 
-function compare (installed, built, options) {
+function compare (installed, built, userOptions = {}) {
   const installedMeta = parse(installed)
   const builtMeta = parse(built)
+  const options = Object.assign({}, DEFAULT_FILTER, userOptions)
 
-  if (installedMeta.imageOwner !== builtMeta.imageOwner) {
+  if (installedMeta.imageOwner !== builtMeta.imageOwner && options.imageOwner) {
     return 'mismatched image owners'
   }
   if (installedMeta.imageName !== builtMeta.imageName) {
     return 'mismatched image names'
   }
-  if (installedMeta.branch !== builtMeta.branch && options && options.branch) {
+  if (installedMeta.branch !== builtMeta.branch && options.branch) {
     return 'mismatched branches'
   }
-  if (installedMeta.owner !== builtMeta.owner && options && options.owner) {
+  if (installedMeta.owner !== builtMeta.owner && options.owner) {
     return 'mismatched owners'
   }
-  if (installedMeta.repo !== builtMeta.repo && options && options.repo) {
+  if (installedMeta.repo !== builtMeta.repo && options.repo) {
     return 'mismatched repos'
   }
-  if (installedMeta.commit && installedMeta.commit === builtMeta.commit) {
+  if (installedMeta.commit && installedMeta.commit === builtMeta.commit && options && options.commit) {
     return 'equal'
   }
   if (builtMeta.version === 'latest' || installedMeta.version === 'latest') {

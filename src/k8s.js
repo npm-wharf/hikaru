@@ -417,7 +417,6 @@ function createDeployment (client, deployment) {
       .then(
         loaded => {
           const diff = diffSpecs(loaded, deployment)
-          console.log(`diff for '${namespace}.${name} - ${JSON.stringify(diff)}'`)
           if (_.isEmpty(diff)) {
             resolve()
           } else {
@@ -1205,7 +1204,6 @@ function updateJob (client, namespace, name, diff) {
           checkJob(client, namespace, name, 'updated', resolve)
         },
         err => {
-          console.log(diff)
           reject(new Error(`Job '${namespace}.${name}' failed to update:\n\t${err.message}`))
         }
       )

@@ -4,10 +4,12 @@ const SEMVER_REGEX = /_[0-9]+[.][0-9]+[.][0-9]+/
 const REFINED_VERSION = /^[v]?(([0-9]+)([.][0-9]+)?([.][0-9]+)?([-]([a-zA-Z.0-9]+))?)$/
 const BUILD_NUMBER_REGEX = /_[0-9]+/
 
-function parseImage (image) {
+function parseImage (image, supplyDefaults) {
   const parts = image.split('/')
   if (parts.length === 1) {
-    return [ 'official', parts[ 0 ] ]
+    return supplyDefaults
+      ? [ 'official', parts[ 0 ] ]
+      : [ undefined, parts[ 0 ] ]
   } else if (parts.length === 2) {
     return parts
   } else {
@@ -22,19 +24,27 @@ function parseImage (image) {
 // owner_repo_branch_version_build_sha
 // branch_version_build_sha
 // version_sha
-function parseTag (tag, repoOwner, imageName) {
-  const parts = tag.split('_')
+function parseTag (tag, repoOwner, imageName, supplyDefaults = true) {
+  let sourceTag = tag
+  if (!tag && supplyDefaults) {
+    sourceTag = 'latest'
+  }
+  const parts = sourceTag ? sourceTag.split('_') : []
   if (parts.length > 6) {
     // someone has used underscores in their owner/repo/branch name :|
-    return parseProblemTag(tag, repoOwner, imageName)
+    return parseProblemTag(sourceTag, repoOwner, imageName)
+  } else if (parts.length === 0) {
+    return [ repoOwner, imageName, undefined, undefined, undefined, undefined ] // allows for upstream filters
   } else if (parts.length === 1) {
-    if (tag === 'latest') {
+    if (sourceTag === 'latest') {
       return [ repoOwner, imageName, 'master', 'latest' ]
     } else {
-      return [ repoOwner, imageName, 'master', tag ]
+      return [ repoOwner, imageName, 'master', sourceTag ]
     }
   } else if (parts.length === 2) {
     return [ repoOwner, imageName, 'master', parts[ 0 ], undefined, parts[ 1 ] ]
+  } else if (parts.length === 3) {
+    return [ repoOwner, imageName, 'master', ...parts ]
   } else if (parts.length === 4) {
     return [ repoOwner, imageName, ...parts ]
   } else if (parts.length === 6) {
@@ -97,10 +107,10 @@ function extractAndReplace (regex, tag) {
   return [ segment.replace('_', ''), tag ]
 }
 
-function parse (fullImage) {
+function parse (fullImage, supplyDefaults = true) {
   const [ image, tag ] = fullImage.split(':')
-  const [ repoOwner, imageName ] = parseImage(image)
-  const [ a, b, c, d, e, f ] = parseTag(tag, repoOwner, imageName)
+  const [ repoOwner, imageName ] = parseImage(image, supplyDefaults)
+  const [ a, b, c, d, e, f ] = parseTag(tag, repoOwner, imageName, supplyDefaults)
   const versions = refineVersion(d)
   return {
     imageName: imageName,
@@ -117,6 +127,13 @@ function parse (fullImage) {
 }
 
 function refineVersion (version) {
+  if (!version) {
+    return {
+      full: undefined,
+      refined: undefined,
+      pre: undefined
+    }
+  }
   const match = REFINED_VERSION.exec(version)
   if (match) {
     return {
