@@ -1,4 +1,4 @@
-FROM node:alpine-8
+FROM node:8-alpine
 MAINTAINER Alex Robson <asrobson@gmail.com>
 
 RUN mkdir /app
