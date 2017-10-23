@@ -252,14 +252,14 @@ Here are a few examples to demonstrate how hikaru would read a few tags.
 
 ### Deploy Cluster
 
-** Deploy From Git **
+**Deploy From Git**
 `POST /api/cluster/{gitHost}/{repoOwner}/{repoName}`
 `POST /api/cluster/{gitHost}/{repoOwner}/{repoName}/{branch}`
 `application/json`
 
 The POST body allows you to supply any tokens that exist in the spec. If tokens are present in the spec and not provided, a 400 will result with a list of the missing tokens.
 
-** Deploy From Tarball **
+**Deploy From Tarball**
 
 `POST /api/cluster`
 `application/x-tar`
@@ -272,14 +272,14 @@ The delete actions requires the same specification used to create it (including 
 
 This also prevents you from deleting resources that weren't deployed as part of your spec.
 
-** Deploy From Git **
+**Remove From Git**
 `DELETE /api/cluster/{gitHost}/{repoOwner}/{repoName}`
 `DELETE /api/cluster/{gitHost}/{repoOwner}/{repoName}/{branch}`
 `application/json`
 
 The DELETE body allows you to supply any tokens that exist in the spec. If tokens are present in the spec and not provided, a 400 will result with a list of the missing tokens.
 
-** Deploy From Tarball **
+**Remove From Tarball**
 
 `DELETE /api/cluster`
 `application/x-tar`
@@ -659,12 +659,15 @@ To use it, you can set the various environment variables to control behavior. To
 
 # Kubernetes Spec
 
-A mcgonagall kubernetes spec to deploy hikaru to a kubernetes cluster can be found at `https://github.com/arobson/hikaru-spec`.
+A mcgonagall kubernetes spec to deploy hikaru to a kubernetes cluster can be found at [`https://github.com/arobson/hikaru-spec`](https://github.com/arobson/hikaru-spec).
 
 It's likely you'll want to copy `hikaru.toml` into your own full cluster specification to get the benefit of mgconagall's NGiNX generation. If that's not something you want though, you can simply deploy directly from the github repo using the CLI:
 
 ```shell
-hikaru deploy git://github.com/arobson/hikaru-spec --k {your cluster endpoint} --u {username} --p {password}
+hikaru deploy git://github.com/arobson/hikaru-spec \
+ -k {your cluster endpoint} \
+ -u {username} \
+ -p {password}
 ```
 
 > Note: there are other auth methods available, the cert approach is probably best :)
