@@ -6,7 +6,7 @@ const parse = require('./imageParser').parse
 const compare = require('./imageComparer').compare
 
 const RESERVED_NAMESPACES = ['default', 'kube-system', 'kube-public']
-const MATCH_KEYS = ['imageOwner', 'imageName', 'owner', 'repo', 'branch' ]
+const MATCH_KEYS = ['imageOwner', 'imageName', 'owner', 'repo', 'branch']
 
 function createAccount (k8s, resources) {
   let accountPromise
