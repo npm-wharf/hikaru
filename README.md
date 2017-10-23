@@ -1,6 +1,9 @@
 # hikaru
 
-A deployment tool for kubernetes. 100 internets if you get the reference. 1000 internets if you get why.
+A deployment and continuous delivery tool for kubernetes. 100 internets if you get the reference. 1000 internets if you get why.
+
+[![Build Status][travis-image]][travis-url]
+[![Coverage Status][coveralls-image]][coveralls-url]
 
 # What It Does - Automating Continuous Delivery
 
@@ -665,3 +668,8 @@ hikaru deploy git://github.com/arobson/hikaru-spec --k {your cluster endpoint} -
 ```
 
 > Note: there are other auth methods available, the cert approach is probably best :)
+
+[travis-url]: https://travis-ci.org/arobson/hikaru
+[travis-image]: https://travis-ci.org/arobson/hikaru.svg?branch=master
+[coveralls-url]: https://coveralls.io/github/arobson/hikaru?branch=master
+[coveralls-image]: https://coveralls.io/repos/github/arobson/hikaru/badge.svg?branch=master
