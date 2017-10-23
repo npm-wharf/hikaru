@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.2.1"></a>
+## [1.2.1](https://github.com/arobson/hikaru/compare/v1.2.0...v1.2.1) (2017-10-23)
+
+
+### Bug Fixes
+
+* adding scope for module name ([d7ec573](https://github.com/arobson/hikaru/commit/d7ec573))
+
+
+
 <a name="1.2.0"></a>
 # 1.2.0 (2017-10-23)
 
