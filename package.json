@@ -1,5 +1,5 @@
 {
-  "name": "hikaru",
+  "name": "@arobson/hikaru",
   "version": "1.2.0",
   "description": "A continuous deployment service and integration helper for kubernetes",
   "main": "src/index.js",

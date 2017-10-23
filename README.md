@@ -393,7 +393,7 @@ Full argument names are shown in the command examples. Shorthand arguments are a
 ## Installation
 
 ```shell
-npm i hikaru -g
+npm i @arobson/hikaru -g
 ```
 
 ## Authentication
