@@ -3,6 +3,9 @@ language: node_js
 os:
   - linux
 
+before_script:
+  - npm i dockyard@latest -g
+
 script:
   - nyc npm test && nyc report --reporter=text-lcov | coveralls
 
