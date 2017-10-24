@@ -5,8 +5,7 @@ const log = require('bole')('k8s')
 const Promise = require('bluebird')
 const join = Promise.join
 
-const fs = require('fs')
-const path = require('path')
+const diffs = require('./specDiff')
 
 function checkCronJob (client, namespace, job, outcome, resolve, wait) {
   let ms = wait || 500
@@ -255,15 +254,41 @@ function checkStatefulSet (client, namespace, statefulSet, outcome, resolve, wai
 
 function createAccount (client, accountSpec) {
   const namespace = accountSpec.metadata.namespace || 'default'
+  const name = accountSpec.metadata.name
+  let createNew = () => {
+    return client
+      .ns(namespace)
+      .serviceaccounts
+      .create(accountSpec)
+      .then(
+        null,
+        err => {
+          throw new Error(`Service account '${accountSpec.metadata.namespace}.${accountSpec.metadata.name}' failed to create:\n\t${err.message}`)
+        }
+      )
+  }
+
   return client
     .ns(namespace)
-    .serviceaccounts
-    .create(accountSpec)
+    .serviceaccount(name)
+    .get()
     .then(
-      null,
-      err => {
-        throw new Error(`Service account '${accountSpec.metadata.namespace}.${accountSpec.metadata.name}' failed to create:\n\t${err.message}`)
-      }
+      loaded => {
+        const diff = diffs.simple(loaded, accountSpec)
+        if (_.isEmpty(diff)) {
+          return true
+        } else {
+          if (diffs.canPatch(diff)) {
+            if (client.saveDiffs) {
+              diffs.save(loaded, accountSpec, diff)
+            }
+            return updateAccount(client, namespace, name, diff)
+          } else {
+            return replaceAccount(client, namespace, name, diff)
+          }
+        }
+      },
+      createNew
     )
 }
 
@@ -289,12 +314,12 @@ function createConfiguration (client, configSpec) {
     .get()
     .then(
       loaded => {
-        const diff = diffSpecs(loaded, configSpec)
+        const diff = diffs.simple(loaded, configSpec)
         if (_.isEmpty(diff)) {
           return true
         } else {
           if (client.saveDiffs) {
-            saveDiff(loaded, configSpec, diff)
+            diffs.save(loaded, configSpec, diff)
           }
           return updateConfiguration(client, namespace, name, diff)
         }
@@ -327,18 +352,26 @@ function createCronJob (client, jobSpec) {
       .get()
       .then(
         loaded => {
-          const diff = diffSpecs(loaded, jobSpec)
+          const diff = diffs.simple(loaded, jobSpec)
           if (_.isEmpty(diff)) {
             resolve()
           } else {
-            if (client.saveDiffs) {
-              saveDiff(loaded, jobSpec, diff)
+            if (diffs.canPatch(diff) || diffs.isBackoffOnly(diff, jobSpec)) {
+              if (client.saveDiffs) {
+                diffs.save(loaded, jobSpec, diff)
+              }
+              updateCronJob(client, namespace, name, diff)
+                .then(
+                  resolve,
+                  reject
+                )
+            } else {
+              replaceCronJob(client, namespace, name, jobSpec)
+                .then(
+                  resolve,
+                  reject
+                )
             }
-            updateCronJob(client, namespace, name, diff)
-              .then(
-                resolve,
-                reject
-              )
           }
         },
         create.bind(null, resolve, reject)
@@ -372,18 +405,26 @@ function createDaemonSet (client, daemonSet) {
       .get()
       .then(
         loaded => {
-          const diff = diffSpecs(loaded, daemonSet)
+          const diff = diffs.simple(loaded, daemonSet)
           if (_.isEmpty(diff)) {
             resolve()
           } else {
-            if (client.saveDiffs) {
-              saveDiff(loaded, daemonSet, diff)
+            if (diffs.canPatch(diff)) {
+              if (client.saveDiffs) {
+                diffs.save(loaded, daemonSet, diff)
+              }
+              patchDaemonSet(client, namespace, name, diff)
+                .then(
+                  resolve,
+                  reject
+                )
+            } else {
+              replaceDaemonSet(client, namespace, name, daemonSet)
+                .then(
+                  resolve,
+                  reject
+                )
             }
-            patchDaemonSet(client, namespace, name, diff)
-              .then(
-                resolve,
-                reject
-              )
           }
         },
         create.bind(null, resolve, reject)
@@ -416,18 +457,26 @@ function createDeployment (client, deployment) {
       .get()
       .then(
         loaded => {
-          const diff = diffSpecs(loaded, deployment)
+          const diff = diffs.simple(loaded, deployment)
           if (_.isEmpty(diff)) {
             resolve()
           } else {
-            if (client.saveDiffs) {
-              saveDiff(loaded, deployment, diff)
+            if (diffs.canPatch(diff)) {
+              if (client.saveDiffs) {
+                diffs.save(loaded, deployment, diff)
+              }
+              updateDeployment(client, namespace, name, diff)
+                .then(
+                  resolve,
+                  reject
+                )
+            } else {
+              replaceDeployment(client, namespace, name, deployment)
+                .then(
+                  resolve,
+                  reject
+                )
             }
-            updateDeployment(client, namespace, name, diff)
-              .then(
-                resolve,
-                reject
-              )
           }
         },
         create.bind(null, resolve, reject)
@@ -459,18 +508,26 @@ function createJob (client, jobSpec) {
       .get()
       .then(
         loaded => {
-          const diff = diffSpecs(loaded, jobSpec)
-          if (_.isEmpty(diff)) {
+          const diff = diffs.simple(loaded, jobSpec)
+          if (_.isEmpty(diff) || diffs.isBackoffOnly(diff, jobSpec)) {
             resolve()
           } else {
-            if (client.saveDiffs) {
-              saveDiff(loaded, jobSpec, diff)
+            if (diffs.canPatch(diff)) {
+              if (client.saveDiffs) {
+                diffs.save(loaded, jobSpec, diff)
+              }
+              updateJob(client, namespace, name, diff)
+                .then(
+                  resolve,
+                  reject
+                )
+            } else {
+              replaceJob(client, namespace, name, jobSpec)
+                .then(
+                  resolve,
+                  reject
+                )
             }
-            updateJob(client, namespace, name, diff)
-              .then(
-                resolve,
-                reject
-              )
           }
         },
         create.bind(null, resolve, reject)
@@ -551,18 +608,26 @@ function createService (client, service) {
       .get()
       .then(
         loaded => {
-          const diff = diffSpecs(loaded, service)
+          const diff = diffs.simple(loaded, service)
           if (_.isEmpty(diff)) {
             resolve()
           } else {
-            if (client.saveDiffs) {
-              saveDiff(loaded, service, diff)
+            if (diffs.canPatch(diff)) {
+              if (client.saveDiffs) {
+                diffs.save(loaded, service, diff)
+              }
+              updateService(client, namespace, name, diff)
+                .then(
+                  resolve,
+                  reject
+                )
+            } else {
+              replaceService(client, namespace, name, service)
+                .then(
+                  resolve,
+                  reject
+                )
             }
-            updateService(client, namespace, name, diff)
-              .then(
-                resolve,
-                reject
-              )
           }
         },
         create.bind(null, resolve, reject)
@@ -594,60 +659,31 @@ function createStatefulSet (client, statefulSet) {
       .get()
       .then(
         loaded => {
-          const diff = diffSpecs(loaded, statefulSet)
+          const diff = diffs.simple(loaded, statefulSet)
           if (_.isEmpty(diff)) {
             resolve()
           } else {
-            if (client.saveDiffs) {
-              saveDiff(loaded, statefulSet, diff)
+            if (diffs.canPatch(diff)) {
+              if (client.saveDiffs) {
+                diffs.save(loaded, statefulSet, diff)
+              }
+              updateStatefulSet(client, namespace, name, diff)
+                .then(
+                  resolve,
+                  reject
+                )
+            } else {
+              replaceStatefulSet(client, namespace, name, statefulSet)
+                .then(
+                  resolve,
+                  reject
+                )
             }
-            updateStatefulSet(client, namespace, name, diff)
-              .then(
-                resolve,
-                reject
-              )
           }
         },
         create.bind(null, resolve, reject)
       )
   })
-}
-
-function deepCompare (a, b, k) {
-  if (Array.isArray(b)) {
-    if (!_.isEqual(a, b)) {
-      if (!_.isObject(b[0])) {
-        return b
-      } else {
-        return _.filter(_.map(b, (x, i) => {
-          if (a.length - 1 >= i) {
-            return deepCompare(a[i], b[i])
-          } else {
-            return x
-          }
-        }), x => !_.isEmpty(x))
-      }
-    }
-  } else if (_.isObject(b)) {
-    let diffs = {}
-    for (let c in b) {
-      let nested = {}
-      if (a[c] == null) {
-        nested[c] = b[c]
-      } else {
-        nested[c] = deepCompare(a[c], b[c], c)
-      }
-      if ((_.isObject(nested[c]) && Object.keys(nested[c]).length) || (!_.isObject(nested[c]) && nested[c])) {
-        diffs = Object.assign({}, diffs, nested)
-      }
-    }
-    return diffs
-  } else {
-    const equal = a == b // eslint-disable-line eqeqeq
-    if (!equal) {
-      return b
-    }
-  }
 }
 
 function deleteAccount (client, namespace, name) {
@@ -854,10 +890,6 @@ function deleteStatefulSet (client, namespace, name) {
         () => { resolve() }
       )
   })
-}
-
-function diffSpecs (oldSpec, newSpec) {
-  return deepCompare(oldSpec, newSpec)
 }
 
 function getContainersFromSpec (resource, image) {
@@ -1090,6 +1122,19 @@ function patchDaemonSet (client, namespace, name, diff) {
   })
 }
 
+function replaceAccount (client, namespace, name, spec) {
+  return client
+    .ns(namespace)
+    .serviceaccount(name)
+    .update(spec)
+    .then(
+      null,
+      err => {
+        throw new Error(`Account '${namespace}.${name}' failed to replace:\n\t${err.message}`)
+      }
+    )
+}
+
 function replaceConfiguration (client, configSpec) {
   const namespace = configSpec.metadata.namespace
   const name = configSpec.metadata.name
@@ -1102,19 +1147,111 @@ function replaceConfiguration (client, configSpec) {
     )
 }
 
-function saveDiff (a, b, diff) {
-  const relative = path.join(process.cwd(), 'diff')
-  const namespace = a.metadata.namespace
-  const name = a.metadata.name
-  const aPath = path.join(relative, `${namespace}-${name}-orignal.json`)
-  const bPath = path.join(relative, `${namespace}-${name}-source.json`)
-  const diffPath = path.join(relative, `${namespace}-${name}-diff.json`)
-  if (!fs.existsSync(relative)) {
-    fs.mkdirSync(relative)
-  }
-  fs.writeFileSync(aPath, JSON.stringify(a, null, 2), 'utf8')
-  fs.writeFileSync(bPath, JSON.stringify(b, null, 2), 'utf8')
-  fs.writeFileSync(diffPath, JSON.stringify(diff, null, 2), 'utf8')
+function replaceDaemonSet (client, namespace, name, spec) {
+  return new Promise((resolve, reject) => {
+    client
+      .group('extensions')
+      .ns(namespace)
+      .daemonset(name)
+      .update(spec)
+      .then(
+        result => {
+          checkDaemonSet(client, namespace, name, 'update', resolve)
+        },
+        err => {
+          reject(new Error(`DaemonSet '${namespace}.${name}' failed to replace:\n\t${err.message}`))
+        }
+      )
+  })
+}
+
+function replaceDeployment (client, namespace, name, spec) {
+  return new Promise((resolve, reject) => {
+    client
+      .group('apps')
+      .ns(namespace)
+      .deployment(name)
+      .update(spec)
+      .then(
+        result => {
+          checkDeployment(client, namespace, name, 'updated', resolve)
+        },
+        err => {
+          reject(new Error(`Deployment '${namespace}.${name}' failed to replace:\n\t${err.message}`))
+        }
+      )
+  })
+}
+
+function replaceCronJob (client, namespace, name, spec) {
+  return new Promise((resolve, reject) => {
+    client
+      .group('batch')
+      .ns(namespace)
+      .cronjob(name)
+      .update(spec)
+      .then(
+        result => {
+          checkCronJob(client, namespace, name, 'update', resolve)
+        },
+        err => {
+          reject(new Error(`CronJob '${namespace}.${name}' failed to replace:\n\t${err.message}`))
+        }
+      )
+  })
+}
+
+function replaceJob (client, namespace, name, spec) {
+  return new Promise((resolve, reject) => {
+    client
+      .group('batch')
+      .ns(namespace)
+      .job(name)
+      .update(spec)
+      .then(
+        result => {
+          checkJob(client, namespace, name, 'updated', resolve)
+        },
+        err => {
+          reject(new Error(`Job '${namespace}.${name}' failed to replace:\n\t${err.message}`))
+        }
+      )
+  })
+}
+
+function replaceService (client, namespace, name, spec) {
+  return new Promise((resolve, reject) => {
+    client
+      .ns(namespace)
+      .service(name)
+      .update(spec)
+      .then(
+        result => {
+          checkService(client, namespace, name, 'update', resolve)
+        },
+        err => {
+          reject(new Error(`Service '${namespace}.${name}' failed to replace:\n\t${err.message}`))
+        }
+      )
+  })
+}
+
+function replaceStatefulSet (client, namespace, name, spec) {
+  return new Promise((resolve, reject) => {
+    client
+      .group('apps')
+      .ns(namespace)
+      .statefulset(name)
+      .update(spec)
+      .then(
+        result => {
+          checkStatefulSet(client, namespace, name, 'updated', resolve)
+        },
+        err => {
+          reject(new Error(`StatefulSet '${namespace}.${name}' failed to replace:\n\t${err.message}`))
+        }
+      )
+  })
 }
 
 function updateConfiguration (client, namespace, name, diff) {
@@ -1123,6 +1260,19 @@ function updateConfiguration (client, namespace, name, diff) {
       null,
       err => {
         throw new Error(`Configuration map '${namespace}.${name}' failed to update:\n\t${err.message}`)
+      }
+    )
+}
+
+function updateAccount (client, namespace, name, diff) {
+  return client
+    .ns(namespace)
+    .serviceaccount(name)
+    .patch(diff)
+    .then(
+      null,
+      err => {
+        throw new Error(`Account '${namespace}.${name}' failed to update:\n\t${err.message}`)
       }
     )
 }
@@ -1286,7 +1436,6 @@ module.exports = function (client) {
     createRoleBinding: createRoleBinding.bind(null, client),
     createService: createService.bind(null, client),
     createStatefulSet: createStatefulSet.bind(null, client),
-    deepCompare: deepCompare,
     deleteAccount: deleteAccount.bind(null, client),
     deleteConfiguration: deleteConfiguration.bind(null, client),
     deleteDaemonSet: deleteDaemonSet.bind(null, client),
