@@ -647,6 +647,19 @@ hikaru.findResources('nginx')
   )
 ```
 
+## Custom Cases
+
+> Caveat Emptor: I do not have time (presently) to document the extensive cluster and k8s module APIs or provide adequate test coverage for them. You are using them at your own risk.
+
+```js
+const hikaru = require('hikaru')
+hikaru.connect()
+  .then(() => {
+    // both `.k8s` and `.cluster` will be available
+    // on hikaru after the connect promise resolves
+  })
+```
+
 # Docker Image
 
 A Docker image containing the hikaru HTTP service is already built for ease of use:

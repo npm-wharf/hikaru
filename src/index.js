@@ -69,6 +69,9 @@ function upgradeImage (image, options) {
 }
 
 const api = {
+  connect: () => {
+    return onCluster(() => {}).then(() => api)
+  },
   deployCluster: deployCluster,
   findResources: findResources,
   getCandidates: getCandidates,

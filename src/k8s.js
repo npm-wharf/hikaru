@@ -985,6 +985,35 @@ function getImagePatch (name, image) {
   }
 }
 
+function getLoadBalancers (client, namespace) {
+  if (namespace) {
+    console.log(arguments)
+    return listServices(client, namespace)
+      .then(
+        services => {
+          console.log(`${namespace} had ${services.items.length} services`)
+          return services.items.reduce((list, service) => {
+            const loadBalancer = service.status.loadBalancer || {}
+            if (loadBalancer.ingress && loadBalancer.ingress.length) {
+              list.push(service)
+            }
+            return list
+          }, [])
+        }
+      )
+  } else {
+    return listNamespaces(client)
+      .then(
+        list => Promise.map(
+            list,
+            getLoadBalancers.bind(null, client)
+          )
+      ).then(
+        lists => _.flatten(lists)
+      )
+  }
+}
+
 function getNamespace (client, namespace, image) {
   return client.namespace(namespace).get()
 }
@@ -1447,6 +1476,7 @@ module.exports = function (client) {
     deleteRoleBinding: deleteRoleBinding.bind(null, client),
     deleteService: deleteService.bind(null, client),
     deleteStatefulSet: deleteStatefulSet.bind(null, client),
+    getLoadBalancers: getLoadBalancers.bind(null, client),
     getDaemonSetsByNamespace: getDaemonSetsByNamespace.bind(null, client),
     getDeploymentsByNamespace: getDeploymentsByNamespace.bind(null, client),
     getStatefulSetsByNamespace: getStatefulSetsByNamespace.bind(null, client),

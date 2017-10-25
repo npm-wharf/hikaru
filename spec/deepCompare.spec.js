@@ -88,7 +88,7 @@ describe('Spec Differences', function () {
                   image: 'test',
                   resources: {
                     limits: {
-                      cpu: "1000m"
+                      cpu: '1000m'
                     }
                   }
                 }
@@ -107,7 +107,7 @@ describe('Spec Differences', function () {
                   image: 'test',
                   resources: {
                     limits: {
-                      cpu: "100%"
+                      cpu: '100%'
                     }
                   }
                 }
