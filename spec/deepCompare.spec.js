@@ -77,6 +77,90 @@ describe('Spec Differences', function () {
       })
     })
 
+    it('should not treat equivalent units as different', function () {
+      const a1 = {
+        spec: {
+          template: {
+            spec: {
+              containers: [
+                {
+                  name: 'one',
+                  image: 'test',
+                  resources: {
+                    limits: {
+                      cpu: "1000m"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+      const b1 = {
+        spec: {
+          template: {
+            spec: {
+              containers: [
+                {
+                  name: 'one',
+                  image: 'test',
+                  resources: {
+                    limits: {
+                      cpu: "100%"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+      const diff1 = simple(a1, b1)
+      diff1.should.eql({})
+
+      const a2 = {
+        spec: {
+          template: {
+            spec: {
+              containers: [
+                {
+                  name: 'one',
+                  image: 'test',
+                  resources: {
+                    limits: {
+                      cpu: '1.5'
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+      const b2 = {
+        spec: {
+          template: {
+            spec: {
+              containers: [
+                {
+                  name: 'one',
+                  image: 'test',
+                  resources: {
+                    limits: {
+                      cpu: '1500m'
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+      const diff2 = simple(a2, b2)
+      diff2.should.eql({})
+    })
+
     it('should produce expected diff', function () {
       const a = {
         a: {
@@ -167,6 +251,40 @@ describe('Spec Differences', function () {
           }
         }
       })
+    })
+
+    it('should ignore hostPath type on source manifest', function () {
+      const a = {
+        spec: {
+          template: {
+            spec: {
+              volumes: [
+                {
+                  hostPath: {
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+      const b = {
+        spec: {
+          template: {
+            spec: {
+              volumes: [
+                {
+                  hostPath: {
+                    type: 'Directory'
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+      const diff = simple(a, b)
+      diff.should.eql({})
     })
   })
 
@@ -376,6 +494,46 @@ describe('Spec Differences', function () {
               containers: [
                 {
                   command: [ 'test' ]
+                }
+              ]
+            }
+          }
+        }
+      }).should.equal(false)
+    })
+
+    it('should return false when containers have mount path changes', function () {
+      canPatch({
+        spec: {
+          template: {
+            spec: {
+              containers: [
+                {
+                  volumeMounts: [
+                    {
+                      mountPath: '/somewhere/else'
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }).should.equal(false)
+    })
+
+    it('should return false when containers have resource changes', function () {
+      canPatch({
+        spec: {
+          template: {
+            spec: {
+              containers: [
+                {
+                  resources: {
+                    requests: {
+                      cpu: '50m'
+                    }
+                  }
                 }
               ]
             }

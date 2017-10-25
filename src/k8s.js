@@ -199,6 +199,8 @@ function checkService (client, namespace, service, outcome, resolve, wait) {
           log.debug(`service '${namespace}.${service}' status - '${JSON.stringify(result.status, null, 2)}'`)
           if (outcome === 'creation' && result.status.loadBalancer) {
             resolve(result)
+          } else if (outcome === 'update' && result.status.loadBalancer) {
+            resolve(result)
           } else {
             checkService(client, namespace, service, outcome, resolve, next)
           }

@@ -269,6 +269,9 @@ function getContainer (k8s, resources) {
   } else if (resources.job) {
     log.info(`    creating job '${resources.job.metadata.name}'`)
     return k8s.createJob(resources.job)
+  } else {
+    log.error(`   an invalid resource was handed off for container creation. No action can be taken on it:\n\t${JSON.stringify(resources)}`)
+    return Promise.resolve()
   }
 }
 

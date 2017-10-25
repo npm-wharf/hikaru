@@ -2,6 +2,16 @@ const _ = require('lodash')
 const fs = require('fs')
 const path = require('path')
 
+const PERCENTAGE = /^([0-9]+)[%]$/
+const MIP = /^([0-9]+)[m]$/
+const WHOLE = /^[0-9.]+$/
+
+// nested properties to ignore because kubernetes
+// never returns them in the spec
+const IGNORE_LIST = {
+  hostPath: 'type'
+}
+
 function canPatch (diff) {
   const containers = (((diff.spec || {})
                       .template || {})
@@ -9,7 +19,9 @@ function canPatch (diff) {
                       .containers
   if (containers && _.some(containers, c => {
     return hasCommandChange(c) ||
-      hasEnvironmentChanges(c)
+      hasEnvironmentChanges(c) ||
+      hasMountPathChange(c) ||
+      hasResourceChanges(c)
   })) {
     return false
   }
@@ -79,6 +91,14 @@ function hasEnvironmentChanges (container) {
   return container.env && container.env.length
 }
 
+function hasMountPathChange (container) {
+  return _.some(container.volumeMounts, v => v.mountPath)
+}
+
+function hasResourceChanges (container) {
+  return !_.isEmpty(container.resources)
+}
+
 function isBackoffOnly (diff, job) {
   const backoff = (((job.spec || {})
                     .template || {})
@@ -129,6 +149,9 @@ function simpleDiff (a, b, k) {
   } else if (_.isObject(b)) {
     let diffs = {}
     for (let c in b) {
+      if (IGNORE_LIST[k] && IGNORE_LIST[k] === c) {
+        continue
+      }
       let nested = {}
       if (a[c] == null) {
         nested[c] = b[c]
@@ -141,9 +164,23 @@ function simpleDiff (a, b, k) {
     }
     return diffs
   } else {
-    const equal = a == b // eslint-disable-line eqeqeq
-    if (!equal) {
-      return b
+    if (PERCENTAGE.test(b) && MIP.test(a)) {
+      const bnum = parseFloat(PERCENTAGE.exec(b)[1])
+      const anum = parseFloat(MIP.exec(a)[1])
+      if (bnum !== (anum / 10)) {
+        return b
+      }
+    } else if (MIP.test(b) && WHOLE.test(a)) {
+      const bnum = parseFloat(MIP.exec(b)[1])
+      const anum = parseFloat(a)
+      if (bnum !== (anum * 1000)) {
+        return b
+      }
+    } else {
+      const equal = a == b // eslint-disable-line eqeqeq
+      if (!equal) {
+        return b
+      }
     }
   }
 }
