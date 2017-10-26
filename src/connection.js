@@ -50,6 +50,7 @@ function getClient (config) {
   return K8sClient(connection)
     .then(
       client => {
+        client.version = config.version
         client.saveDiffs = config.saveDiffs
         return client
       },

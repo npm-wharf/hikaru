@@ -3,6 +3,7 @@ const path = require('path')
 const fs = require('fs')
 const URL = 'K8S_URL'
 const HOST = 'K8S_HOST'
+const VERSION = 'K8S_VERSION'
 const TOKEN = 'K8S_TOKEN'
 const CA = 'K8S_CA'
 const CERT = 'K8S_CERT'
@@ -30,6 +31,7 @@ module.exports = function () {
     url: url,
     username: process.env[ USERNAME ],
     password: process.env[ PASSWORD ],
+    version: process.env[ VERSION ] || '1.7',
     token: process.env[ TOKEN ],
     caFile: process.env[ CA ],
     certFile: process.env[ CERT ],

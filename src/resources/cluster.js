@@ -19,7 +19,8 @@ function deployFromGit (config, hikaru, data, body) {
     url,
     {
       branch: data.branch,
-      data: body
+      data: body,
+      version: config.version
     }
   ).then(
     result => {
@@ -57,7 +58,8 @@ function removeFromGit (config, hikaru, data, body) {
     url,
     {
       branch: data.branch,
-      data: body
+      data: body,
+      version: config.version
     }
   ).then(
     result => {
@@ -92,7 +94,10 @@ function deployFromTar (config, hikaru, env) {
   log.debug(`received request to deploy '${env.file}' to '${config.url}'`)
   return hikaru.deployCluster(
     env.filePath,
-    env.fields
+    {
+      data: env.fields,
+      version: config.version
+    }
   ).then(
     result => {
       rimraf.sync(path.dirname(env.filePath))
@@ -128,7 +133,10 @@ function removeFromTar (config, hikaru, env) {
   log.debug(`received request to remove '${env.file}' from '${config.url}'`)
   return hikaru.removeCluster(
     env.filePath,
-    env.fields
+    {
+      data: env.fields,
+      version: config.version
+    }
   ).then(
     result => {
       rimraf.sync(path.dirname(env.filePath))

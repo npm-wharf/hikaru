@@ -1,6 +1,6 @@
 require('./setup')
 
-const diff = require('../src/specDiff')
+const diff = require('../src/k8s/specDiff')
 
 describe('Spec Differences', function () {
   const simple = diff.simple

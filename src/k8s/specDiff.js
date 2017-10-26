@@ -82,6 +82,23 @@ function complexDiff (a, b, k) {
   }
 }
 
+function getImagePatch (name, image) {
+  return {
+    spec: {
+      template: {
+        spec: {
+          containers: [
+            {
+              name: name,
+              image: image
+            }
+          ]
+        }
+      }
+    }
+  }
+}
+
 function hasCommandChange (container) {
   return (container.command && container.command.length) ||
     (container.args && container.args.length)
@@ -100,6 +117,7 @@ function hasResourceChanges (container) {
 }
 
 function isBackoffOnly (diff, job) {
+  try {
   const backoff = (((job.spec || {})
                     .template || {})
                     .spec || {})
@@ -114,6 +132,7 @@ function isBackoffOnly (diff, job) {
     }
   }
   return _.isEqual(diff, template)
+  } catch (e) { console.log(e) }
 }
 
 function saveDiff (a, b, diff) {
@@ -195,6 +214,7 @@ function isNested (object) {
 module.exports = {
   canPatch: canPatch,
   complex: complexDiff,
+  getImagePatch: getImagePatch,
   isBackoffOnly: isBackoffOnly,
   save: saveDiff,
   simple: simpleDiff

@@ -9,6 +9,11 @@ function build (config) {
       default: config.url,
       demandOption: !config.url
     },
+    apiVersion: {
+      alias: 'v',
+      describe: 'kubernetes cluster API version',
+      default: '1.7'
+    },
     user: {
       alias: 'u',
       describe: 'username for basic authentication to the cluster',
@@ -76,9 +81,15 @@ function handle (config, hikaru, readFile, debugOut, argv) {
   if (argv.url) {
     config.url = argv.url
   }
+  if (argv.apiVersion) {
+    config.version = argv.apiVersion
+  }
+
   config.saveDiffs = argv.saveDiffs
 
-  const options = {}
+  const options = {
+    version: config.version
+  }
 
   if (argv.tokenFile) {
     options.data = inquire.loadTokens(argv.tokenFile)
