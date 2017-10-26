@@ -117,7 +117,6 @@ function hasResourceChanges (container) {
 }
 
 function isBackoffOnly (diff, job) {
-  try {
   const backoff = (((job.spec || {})
                     .template || {})
                     .spec || {})
@@ -132,7 +131,6 @@ function isBackoffOnly (diff, job) {
     }
   }
   return _.isEqual(diff, template)
-  } catch (e) { console.log(e) }
 }
 
 function saveDiff (a, b, diff) {
