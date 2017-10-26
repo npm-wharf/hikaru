@@ -987,11 +987,9 @@ function getImagePatch (name, image) {
 
 function getLoadBalancers (client, namespace) {
   if (namespace) {
-    console.log(arguments)
     return listServices(client, namespace)
       .then(
         services => {
-          console.log(`${namespace} had ${services.items.length} services`)
           return services.items.reduce((list, service) => {
             const loadBalancer = service.status.loadBalancer || {}
             if (loadBalancer.ingress && loadBalancer.ingress.length) {
