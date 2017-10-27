@@ -6,6 +6,7 @@ describe('Spec Differences', function () {
   const simple = diff.simple
   const complex = diff.complex
   const canPatch = diff.canPatch
+  const canReplace = diff.canReplace
 
   describe('simple diffs', function () {
     it('should only include the properties that are different', function () {
@@ -64,8 +65,10 @@ describe('Spec Differences', function () {
             spec: {
               containers: [
                 {
+                  name: 'one',
                   env: [
                     {
+                      name: 'a',
                       value: 'two'
                     }
                   ]
@@ -463,98 +466,21 @@ describe('Spec Differences', function () {
     })
   })
 
-  describe('can patch', function () {
-    it('should return false when containers have env variables', function () {
+  describe('can patch or replace', function () {
+    it('should return false for patch when spec changes ClusterIP', function () {
       canPatch({
         spec: {
-          template: {
-            spec: {
-              containers: [
-                {
-                  name: 'test',
-                  env: [
-                    {
-                      name: 'ONE',
-                      value: '1'
-                    }
-                  ]
-                }
-              ]
-            }
-          }
+          clusterIP: 'None'
         }
       }).should.equal(false)
     })
 
-    it('should return false when containers have command changes', function () {
-      canPatch({
+    it('should return false for replace when spec changes ClusterIP', function () {
+      canReplace({
         spec: {
-          template: {
-            spec: {
-              containers: [
-                {
-                  command: [ 'test' ]
-                }
-              ]
-            }
-          }
+          clusterIP: 'None'
         }
       }).should.equal(false)
-    })
-
-    it('should return false when containers have mount path changes', function () {
-      canPatch({
-        spec: {
-          template: {
-            spec: {
-              containers: [
-                {
-                  volumeMounts: [
-                    {
-                      mountPath: '/somewhere/else'
-                    }
-                  ]
-                }
-              ]
-            }
-          }
-        }
-      }).should.equal(false)
-    })
-
-    it('should return false when containers have resource changes', function () {
-      canPatch({
-        spec: {
-          template: {
-            spec: {
-              containers: [
-                {
-                  resources: {
-                    requests: {
-                      cpu: '50m'
-                    }
-                  }
-                }
-              ]
-            }
-          }
-        }
-      }).should.equal(false)
-    })
-
-    it('should return true when containers do not have env or command changes', function () {
-      canPatch({
-        spec: {
-          template: {
-            spec: {
-              containers: [
-                {
-                }
-              ]
-            }
-          }
-        }
-      }).should.equal(true)
     })
   })
 

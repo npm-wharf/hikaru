@@ -13,16 +13,14 @@ const IGNORE_LIST = {
 }
 
 function canPatch (diff) {
-  const containers = (((diff.spec || {})
-                      .template || {})
-                      .spec || {})
-                      .containers
-  if (containers && _.some(containers, c => {
-    return hasCommandChange(c) ||
-      hasEnvironmentChanges(c) ||
-      hasMountPathChange(c) ||
-      hasResourceChanges(c)
-  })) {
+  if (diff.spec && diff.spec.clusterIP) {
+    return false
+  }
+  return true
+}
+
+function canReplace (diff) {
+  if (diff.spec && diff.spec.clusterIP) {
     return false
   }
   return true
@@ -99,23 +97,6 @@ function getImagePatch (name, image) {
   }
 }
 
-function hasCommandChange (container) {
-  return (container.command && container.command.length) ||
-    (container.args && container.args.length)
-}
-
-function hasEnvironmentChanges (container) {
-  return container.env && container.env.length
-}
-
-function hasMountPathChange (container) {
-  return _.some(container.volumeMounts, v => v.mountPath)
-}
-
-function hasResourceChanges (container) {
-  return !_.isEmpty(container.resources)
-}
-
 function isBackoffOnly (diff, job) {
   const backoff = (((job.spec || {})
                     .template || {})
@@ -179,6 +160,9 @@ function simpleDiff (a, b, k) {
         diffs = Object.assign({}, diffs, nested)
       }
     }
+    if (!_.isEmpty(diffs) && b.name && b.name === a.name) {
+      diffs.name = b.name
+    }
     return diffs
   } else {
     if (PERCENTAGE.test(b) && MIP.test(a)) {
@@ -211,6 +195,7 @@ function isNested (object) {
 
 module.exports = {
   canPatch: canPatch,
+  canReplace: canReplace,
   complex: complexDiff,
   getImagePatch: getImagePatch,
   isBackoffOnly: isBackoffOnly,

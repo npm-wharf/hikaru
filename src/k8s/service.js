@@ -21,7 +21,7 @@ function checkService (client, namespace, name, outcome, resolve, wait) {
   let next = ms + (ms / 2)
   log.debug(`checking service status '${namespace}.${name}' for '${outcome}'`)
   setTimeout(() => {
-    single(client, namespace, name)
+    single(client, namespace, name).get()
       .then(
         result => {
           log.debug(`service '${namespace}.${name}' status - '${JSON.stringify(result.status, null, 2)}'`)
@@ -76,10 +76,16 @@ function createService (client, service) {
                   resolve,
                   reject
                 )
-            } else {
+            } else if (diffs.canReplace(diff)) {
               replaceService(client, namespace, name, service)
                 .then(
                   resolve,
+                  reject
+                )
+            } else {
+              deleteService(client, namespace, name)
+                .then(
+                  create.bind(null, resolve, reject),
                   reject
                 )
             }
