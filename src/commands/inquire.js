@@ -5,12 +5,15 @@ const inquirer = require('inquirer')
 const toml = require('toml-j0.4')
 const yaml = require('js-yaml')
 
+const SECRET_RGX = /(pass$|password|passwd|secret|secrt|scrt|secure)/i
+
 const prompt = inquirer.createPromptModule()
 
 function acquireTokens (tokens) {
   return Promise.mapSeries(tokens, (token) => {
+    const type = SECRET_RGX.test(token) ? 'password' : 'input'
     return prompt({
-      type: 'input',
+      type: type,
       name: token,
       message: `'${token}'`,
       validate: (x) => {
