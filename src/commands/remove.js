@@ -44,6 +44,10 @@ function build (config) {
       alias: 'd',
       describe: 'show debug output in logging',
       default: false
+    },
+    tokenFile: {
+      alias: 'f',
+      describe: 'supply a key/value file for any tokens in the specification'
     }
   }
 }
