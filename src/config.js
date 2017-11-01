@@ -32,7 +32,7 @@ module.exports = function () {
     username: process.env[ USERNAME ],
     password: process.env[ PASSWORD ],
     version: process.env[ VERSION ] || '1.7',
-    token: process.env[ TOKEN ],
+    token: readIfFile(process.env[ TOKEN ]),
     caFile: process.env[ CA ],
     certFile: process.env[ CERT ],
     keyFile: process.env[ KEY ],
