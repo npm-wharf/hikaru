@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.3.4"></a>
+## [1.3.4](https://github.com/arobson/hikaru/compare/v1.3.3...v1.3.4) (2017-11-01)
+
+
+### Bug Fixes
+
+* allow token to be read from secret file in kubernetes ([e73f0ee](https://github.com/arobson/hikaru/commit/e73f0ee))
+* correct job and cron job's update and replace logic to use delete and create as a fallback ([5e43a04](https://github.com/arobson/hikaru/commit/5e43a04))
+* improve diff to allow more update vs. replacements, force remove and create when ClusterIP changes on services ([b7fa3c9](https://github.com/arobson/hikaru/commit/b7fa3c9))
+
+
+
 <a name="1.3.3"></a>
 ## [1.3.3](https://github.com/arobson/hikaru/compare/v1.3.2...v1.3.3) (2017-10-27)
 
