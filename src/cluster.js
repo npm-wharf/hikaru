@@ -33,11 +33,19 @@ function createConfiguration (k8s, cluster) {
 
 function createContainer (k8s, resources) {
   const spec = getContainerSpec(resources)
-  return getContainer(k8s, resources)
-    .then(
-      null,
-      onContainerCreationFailed.bind(null, spec)
-    )
+  const create = () => {
+    return getContainer(k8s, resources)
+      .then(
+        null,
+        onContainerCreationFailed.bind(null, spec)
+      )
+  }
+  if (resources.job || resources.cronjob) {
+    return createContainerServices(k8s, resources)
+      .then(create)
+  } else {
+    return create()
+  }
 }
 
 function createContainerServices (k8s, resources) {
@@ -53,7 +61,6 @@ function createContainerServices (k8s, resources) {
 }
 
 function createLevels (k8s, cluster) {
-  cluster.levels.sort()
   return Promise.each(cluster.levels, (level) => {
     log.info(`creating level: ${level}`)
     return createServicesInLevel(k8s, level, cluster)
@@ -146,7 +153,7 @@ function deleteContainerServices (k8s, resources) {
 }
 
 function deleteLevels (k8s, cluster) {
-  cluster.levels.sort().reverse()
+  cluster.levels.reverse()
   return Promise.each(cluster.levels, (level) => {
     log.info(`deleting level: ${level}`)
     return deleteServicesInLevel(k8s, level, cluster)
