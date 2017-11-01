@@ -12,14 +12,20 @@ const IGNORE_LIST = {
   hostPath: 'type'
 }
 
-function canPatch (diff) {
+function canPatch (diff, type) {
+  if (type && type === 'job') {
+    return false
+  }
   if (diff.spec && diff.spec.clusterIP) {
     return false
   }
   return true
 }
 
-function canReplace (diff) {
+function canReplace (diff, type) {
+  if (type && type === 'job') {
+    return false
+  }
   if (diff.spec && diff.spec.clusterIP) {
     return false
   }

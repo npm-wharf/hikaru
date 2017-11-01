@@ -34,12 +34,16 @@ function checkJob (client, namespace, name, outcome, resolve, reject, wait) {
                 resolve(result)
               } else if (status.type === 'Failed' && status.status === 'True') {
                 reject(new Error(`Job '${namespace}.${name}' failed to complete with status: '${JSON.stringify(result.status, null, 2)}'`))
+              } else {
+                checkJob(client, namespace, name, outcome, resolve, reject, next)
               }
             } else if (outcome === 'updated') {
               if (status.type === 'Complete' && status.status === 'True') {
                 resolve(result)
               } else if (status.type === 'Failed' && status.status === 'True') {
                 reject(new Error(`Job '${namespace}.${name}' failed to update with status: '${JSON.stringify(result.status, null, 2)}'`))
+              } else {
+                checkJob(client, namespace, name, outcome, resolve, reject, next)
               }
             } else {
               checkJob(client, namespace, name, outcome, resolve, reject, next)
@@ -82,7 +86,7 @@ function createJob (client, jobSpec) {
           if (_.isEmpty(diff)) {
             resolve()
           } else {
-            if (diffs.canPatch(diff) || diffs.isBackoffOnly(diff, jobSpec)) {
+            if (diffs.canPatch(diff, 'job') || diffs.isBackoffOnly(diff, jobSpec)) {
               if (client.saveDiffs) {
                 diffs.save(loaded, jobSpec, diff)
               }
@@ -91,10 +95,16 @@ function createJob (client, jobSpec) {
                   resolve,
                   reject
                 )
-            } else {
+            } else if (diffs.canReplace(diff, 'job')) {
               replaceJob(client, namespace, name, jobSpec)
                 .then(
                   resolve,
+                  reject
+                )
+            } else {
+              deleteJob(client, namespace, name)
+                .then(
+                  create.bind(null, resolve, reject),
                   reject
                 )
             }
