@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.4.0"></a>
+# [1.4.0](https://github.com/arobson/hikaru/compare/v1.3.4...v1.4.0) (2017-11-06)
+
+
+### Bug Fixes
+
+* add missing token file argument to remove command ([61ecb3c](https://github.com/arobson/hikaru/commit/61ecb3c))
+* create resource services for job and cron jobs before creating container ([ac58c35](https://github.com/arobson/hikaru/commit/ac58c35))
+
+
+### Features
+
+* support one-off manifest types ([33ab25e](https://github.com/arobson/hikaru/commit/33ab25e))
+
+
+
 <a name="1.3.4"></a>
 ## [1.3.4](https://github.com/arobson/hikaru/compare/v1.3.3...v1.3.4) (2017-11-01)
 
