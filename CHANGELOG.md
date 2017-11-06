@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.4.1"></a>
+## [1.4.1](https://github.com/arobson/hikaru/compare/v1.4.0...v1.4.1) (2017-11-06)
+
+
+### Bug Fixes
+
+* correct problems with health checks for custom manifest types ([caa8af9](https://github.com/arobson/hikaru/commit/caa8af9))
+
+
+
 <a name="1.4.0"></a>
 # [1.4.0](https://github.com/arobson/hikaru/compare/v1.3.4...v1.4.0) (2017-11-06)
 
