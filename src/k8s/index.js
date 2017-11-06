@@ -35,6 +35,7 @@ module.exports = function (client) {
   const daemonSet = require('./daemonSet')(client)
   const deployment = require('./deployment')(client)
   const job = require('./job')(client)
+  const manifest = require('./manifest')(client)
   const namespace = require('./namespace')(client)
   const roleBinding = require('./roleBinding')(client)
   const service = require('./service')(client)
@@ -76,6 +77,12 @@ module.exports = function (client) {
     deleteJob: job.delete,
     listJobs: job.list,
     updateJob: job.update,
+
+    createManifest: manifest.create,
+    deleteManifest: manifest.delete,
+    listManifests: manifest.list,
+    updateManifest: manifest.update,
+    replaceManifest: manifest.replace,
 
     createNamespace: namespace.create,
     deleteNamespace: namespace.delete,

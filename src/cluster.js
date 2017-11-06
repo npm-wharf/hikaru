@@ -277,8 +277,13 @@ function getContainer (k8s, resources) {
     log.info(`    creating job '${resources.job.metadata.name}'`)
     return k8s.createJob(resources.job)
   } else {
-    log.error(`   an invalid resource was handed off for container creation. No action can be taken on it:\n\t${JSON.stringify(resources)}`)
-    return Promise.resolve()
+    const manifest = _.find(
+      _.values(resources),
+      o => o.kind != undefined // eslint-disable-line eqeqeq
+    )
+    const kind = manifest.kind.toLowerCase()
+    log.info(`    creating ${kind} '${manifest.metadata.name}'`)
+    return k8s.createManifest(manifest)
   }
 }
 
@@ -293,6 +298,12 @@ function getContainerSpec (resources) {
     return resources.cronJob
   } else if (resources.job) {
     return resources.job
+  } else {
+    const manifest = _.find(
+      _.values(resources),
+      o => o.kind != undefined // eslint-disable-line eqeqeq
+    )
+    return manifest
   }
 }
 
