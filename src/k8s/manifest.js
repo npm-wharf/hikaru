@@ -14,7 +14,6 @@ function base (client, manifest) {
 function single (client, manifest) {
   const name = manifest.metadata.name
   const kind = manifest.kind.toLowerCase()
-  console.log(name, kind)
   return base(client, manifest)[kind](name)
 }
 
@@ -24,12 +23,18 @@ function multiple (client, manifest) {
   return base(client, manifest)[plural]
 }
 
-function checkManifest (client, manifest, outcome, resolve, wait) {
+function checkManifest (client, manifest, outcome, resolve, limit, wait) {
   let ms = wait || 500
   let next = ms + (ms / 2)
-  const namespace = manifest.metdata.namespace || 'default'
-  const name = manifest.metdata.name
+  if (limit === undefined) {
+    limit = 10000
+  } else {
+
+  }
+  const namespace = manifest.metadata.namespace || 'default'
+  const name = manifest.metadata.name
   log.debug(`checking service status '${namespace}.${name}' for '${outcome}'`)
+
   setTimeout(() => {
     single(client, manifest).get()
       .then(
@@ -39,8 +44,10 @@ function checkManifest (client, manifest, outcome, resolve, wait) {
             resolve(result)
           } else if (outcome === 'update' && result.status.loadBalancer) {
             resolve(result)
+          } else if (limit <= 0) {
+            resolve(result)
           } else {
-            checkManifest(client, manifest, outcome, resolve, next)
+            checkManifest(client, manifest, outcome, resolve, limit - ms, next)
           }
         },
         () => {
@@ -49,7 +56,7 @@ function checkManifest (client, manifest, outcome, resolve, wait) {
             resolve()
           } else {
             log.debug(`checking service '${namespace}.${name}' status - resulted in API error. Checking again in ${next} ms.`)
-            checkManifest(client, manifest, outcome, resolve, next)
+            checkManifest(client, manifest, outcome, resolve, limit - ms, next)
           }
         }
       )
@@ -59,12 +66,11 @@ function checkManifest (client, manifest, outcome, resolve, wait) {
 function createManifest (client, manifest) {
   const namespace = manifest.metadata.namespace || 'default'
   const name = manifest.metadata.name
-  const kind = manifest.kind.toLowerCase()
   let create = (resolve, reject) =>
     multiple(client, manifest).create(manifest)
     .then(
       result => {
-        checkManifest(client, manifest, namespace, name, 'creation', resolve)
+        checkManifest(client, manifest, 'creation', resolve)
       },
       err => {
         reject(new Error(`Manifest '${namespace}.${name}' failed to create:\n\t${err.message}`))
