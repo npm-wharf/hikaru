@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.4.2"></a>
+## [1.4.2](https://github.com/npm-wharf/hikaru/compare/v1.4.1...v1.4.2) (2017-11-12)
+
+
+### Bug Fixes
+
+* solve issue preventing ability to use data files for some tokens and collect missing tokens from CLI via prompts ([8350769](https://github.com/npm-wharf/hikaru/commit/8350769))
+
+
+
 <a name="1.4.1"></a>
 ## [1.4.1](https://github.com/arobson/hikaru/compare/v1.4.0...v1.4.1) (2017-11-06)
 
