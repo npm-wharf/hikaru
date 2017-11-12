@@ -109,8 +109,13 @@ function handle (config, hikaru, readFile, debugOut, argv) {
           return inquire.acquireTokens(err.tokens)
             .then(
               tokens => {
+                if (options.data !== undefined) {
+                  options.data = Object.assign(options.data, tokens)
+                } else {
+                  options.data = tokens
+                }
                 return hikaru.deployCluster(err.specPath, {
-                  data: tokens
+                  data: options.data
                 })
               }
             )
