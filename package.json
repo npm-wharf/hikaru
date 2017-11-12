@@ -50,18 +50,18 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/arobson/hikaru.git"
+    "url": "git://github.com/npm-wharf/hikaru.git"
   },
   "keywords": [
     "kubernetes",
     "deployment"
   ],
   "author": "Alex Robson",
-  "license": "MIT",
+  "license": "ISC",
   "bugs": {
-    "url": "https://github.com/arobson/hikaru/issues"
+    "url": "https://github.com/npm-wharf/hikaru/issues"
   },
-  "homepage": "https://github.com/arobson/hikaru#readme",
+  "homepage": "https://github.com/npm-wharf/hikaru#readme",
   "standard": {
     "env": [
       "mocha"
