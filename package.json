@@ -1,6 +1,6 @@
 {
   "name": "@arobson/hikaru",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "A continuous deployment service and integration helper for kubernetes",
   "main": "src/index.js",
   "bin": {
