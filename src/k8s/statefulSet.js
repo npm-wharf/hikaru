@@ -22,6 +22,9 @@ function multiple (client, namespace, name) {
 function checkStatefulSet (client, namespace, name, outcome, resolve, wait) {
   let ms = wait || 500
   let next = ms + (ms / 2)
+  if (next > 5000) {
+    next = 5000
+  }
   log.debug(`checking statefulSet status '${namespace}.${name}' for '${outcome}'`)
   setTimeout(() => {
     single(client, namespace, name).get()

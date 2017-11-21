@@ -36,7 +36,7 @@ hikaru also does not accept docker credentials nor will it store and fetch them.
 
 # Complimentary Tooling
 
-hikaru requires [mcgonagall](https://github.com/npm/mcgonagall) style cluster specifications. You'll get the most mileage out of it by adopting [Dockyard](https://github.com/npm/dockyard) to build your Docker images or at least using a compatible tagging approach (see: [buildgoggles](https://www.npmjs.com/package/buildgoggles)). These complimentary aspects come largely from how hikaru infers metadata about Kubernetes resources based on the Docker image name and tag.
+hikaru requires [mcgonagall](https://github.com/npm-wharf/mcgonagall) style cluster specifications. You'll get the most mileage out of it by adopting [Dockyard](https://github.com/npm-wharf/dockyard) to build your Docker images or at least using a compatible tagging approach (see: [buildgoggles](https://www.npmjs.com/package/buildgoggles)). These complimentary aspects come largely from how hikaru infers metadata about Kubernetes resources based on the Docker image name and tag.
 
 # Modes
 
@@ -664,7 +664,7 @@ hikaru.connect()
 
 A Docker image containing the hikaru HTTP service is already built for ease of use:
 
-`arobson/hikaru:latest`
+`npmwharf/hikaru:latest`
 
 And also released with various version tagging schemes.
 
@@ -672,12 +672,12 @@ To use it, you can set the various environment variables to control behavior. To
 
 # Kubernetes Spec
 
-A mcgonagall kubernetes spec to deploy hikaru to a kubernetes cluster can be found at [`https://github.com/arobson/hikaru-spec`](https://github.com/arobson/hikaru-spec).
+A mcgonagall kubernetes spec to deploy hikaru to a kubernetes cluster can be found at [`https://github.com/npm-wharf/hikaru-spec`](https://github.com/npm-wharf/hikaru-spec).
 
 It's likely you'll want to copy `hikaru.toml` into your own full cluster specification to get the benefit of mgconagall's NGiNX generation. If that's not something you want though, you can simply deploy directly from the github repo using the CLI:
 
 ```shell
-hikaru deploy git://github.com/arobson/hikaru-spec \
+hikaru deploy git://github.com/npm-wharf/hikaru-spec \
  -k {your cluster endpoint} \
  -u {username} \
  -p {password}
@@ -685,7 +685,7 @@ hikaru deploy git://github.com/arobson/hikaru-spec \
 
 > Note: there are other auth methods available, the cert approach is probably best :)
 
-[travis-url]: https://travis-ci.org/arobson/hikaru
-[travis-image]: https://travis-ci.org/arobson/hikaru.svg?branch=master
-[coveralls-url]: https://coveralls.io/github/arobson/hikaru?branch=master
-[coveralls-image]: https://coveralls.io/repos/github/arobson/hikaru/badge.svg?branch=master
+[travis-url]: https://travis-ci.org/npm-wharf/hikaru
+[travis-image]: https://travis-ci.org/npm-wharf/hikaru.svg?branch=master
+[coveralls-url]: https://coveralls.io/github/npm-wharf/hikaru?branch=master
+[coveralls-image]: https://coveralls.io/repos/github/npm-wharf/hikaru/badge.svg?branch=master

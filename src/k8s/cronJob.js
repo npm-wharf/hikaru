@@ -29,6 +29,9 @@ function multiple (client, namespace) {
 function checkCronJob (client, namespace, name, outcome, resolve, reject, wait) {
   let ms = wait || 500
   let next = ms + (ms / 2)
+  if (next > 5000) {
+    next = 5000
+  }
   setTimeout(() => {
     log.debug(`checking cron job status '${namespace}.${name}' for '${outcome}'`)
     single(client, namespace, name).get()

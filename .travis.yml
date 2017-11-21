@@ -14,4 +14,4 @@ node_js:
 
 after_success:
   - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
-  - dockyard build image --repo=arobson --name=hikaru
+  - dockyard build image --repo=npmwharf --name=hikaru
