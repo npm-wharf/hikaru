@@ -40,14 +40,18 @@ function build (config) {
       describe: 'path to the key file to authenticate the client',
       default: config.keyFile
     },
-    debug: {
-      alias: 'd',
-      describe: 'show debug output in logging',
+    verbose: {
+      describe: 'output verbose logging (shows status checks)',
       default: false,
       boolean: true
     },
-    saveDiffs: {
+    scale: {
       alias: 's',
+      describe: 'choose a scale factor to apply (if available) for the cluster',
+      type: 'string'
+    },
+    saveDiffs: {
+      alias: 'd',
       describe: 'if deploying a cluster over an existing one, save any differences that exist between existing resources and deployed ones in a `./diff` folder',
       default: false,
       boolean: true
@@ -84,6 +88,9 @@ function handle (config, hikaru, readFile, debugOut, argv) {
   if (argv.apiVersion) {
     config.version = argv.apiVersion
   }
+  if (argv.scale) {
+    config.scale = argv.scale
+  }
 
   config.saveDiffs = argv.saveDiffs
 
@@ -96,7 +103,7 @@ function handle (config, hikaru, readFile, debugOut, argv) {
   }
 
   bole.output({
-    level: argv.debug ? 'debug' : 'info',
+    level: argv.verbose ? 'debug' : 'info',
     stream: debugOut
   })
 

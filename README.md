@@ -412,6 +412,10 @@ When deploying a spec that has already been deployed, hikaru will attempt to dif
 
 A `saveDiffs` flag will cause any detected changes to be saved in a `diff` folder which includes the original, new and diff versions of each manifest that was updated in this way.
 
+### `scale`
+
+The scale factor label depends on the cluster specification. If a label is specified that does not exist in the spec or the spec is missing `scaleOrder` (i.e. the scale cannot be applied) - hikaru will ignore this flag and deploy the specification as specified with defaults.
+
 ```shell
 hikaru deploy {spec} \
   --url {kubernetes url} \
@@ -422,6 +426,7 @@ hikaru deploy {spec} \
   --ca {path to cluster CA} \
   --cert {path to client cert} \
   --key {path to client key} \
+  --scale {scaleLabel} \
   --saveDiffs \
   --debug
 ```
@@ -544,6 +549,7 @@ hikaru.deployCluster(
     branch: 'special', // 'master' is default
     // kubernetes API/cluster version
     version: '1.8', // '1.7' is default
+    scale: 'medium', // no default value
     data: {
       token1: 'value'
       token2: 100
