@@ -29,20 +29,29 @@ function getLoadBalancers (ns, svc, namespace) {
 }
 
 module.exports = function (client) {
+  const deletes = {}
   const account = require('./account')(client)
   const configuration = require('./configuration')(client)
-  const cronJob = require('./cronJob')(client)
-  const daemonSet = require('./daemonSet')(client)
-  const deployment = require('./deployment')(client)
-  const job = require('./job')(client)
+  const cronJob = require('./cronJob')(client, deletes)
+  const daemonSet = require('./daemonSet')(client, deletes)
+  const deployment = require('./deployment')(client, deletes)
+  const job = require('./job')(client, deletes)
   const manifest = require('./manifest')(client)
   const namespace = require('./namespace')(client)
   const roleBinding = require('./roleBinding')(client)
-  const service = require('./service')(client)
-  const statefulSet = require('./statefulSet')(client)
+  const service = require('./service')(client, deletes)
+  const statefulSet = require('./statefulSet')(client, deletes)
+
+  deletes.cronJob = cronJob.delete
+  deletes.daemonSet = daemonSet.delete
+  deletes.deployment = deployment.delete
+  deletes.job = job.delete
+  deletes.service = service.delete
+  deletes.statefulSet = statefulSet.delete
 
   return {
     client: client,
+    deletes: deletes,
 
     createAccount: account.create,
     deleteAccount: account.delete,

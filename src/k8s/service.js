@@ -49,7 +49,7 @@ function checkService (client, namespace, name, outcome, resolve, wait) {
   }, ms)
 }
 
-function createService (client, service) {
+function createService (client, deletes, service) {
   const namespace = service.metadata.namespace || 'default'
   const name = service.metadata.name
   let create = (resolve, reject) =>
@@ -151,9 +151,9 @@ function updateService (client, namespace, name, diff) {
   })
 }
 
-module.exports = function (client) {
+module.exports = function (client, deletes) {
   return {
-    create: createService.bind(null, client),
+    create: createService.bind(null, client, deletes),
     delete: deleteService.bind(null, client),
     list: listServices.bind(null, client),
     replace: replaceService.bind(null, client),

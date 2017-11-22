@@ -77,7 +77,7 @@ function checkCronJob (client, namespace, name, outcome, resolve, reject, wait) 
   }, ms)
 }
 
-function createCronJob (client, jobSpec) {
+function createCronJob (client, deletes, jobSpec) {
   const namespace = jobSpec.metadata.namespace || 'default'
   const name = jobSpec.metadata.name
   let create = (resolve, reject) =>
@@ -179,9 +179,9 @@ function updateCronJob (client, namespace, name, diff) {
   })
 }
 
-module.exports = function (client) {
+module.exports = function (client, deletes) {
   return {
-    create: createCronJob.bind(null, client),
+    create: createCronJob.bind(null, client, deletes),
     delete: deleteCronJob.bind(null, client),
     list: listCronJobs.bind(null, client),
     replace: replaceCronJob.bind(null, client),

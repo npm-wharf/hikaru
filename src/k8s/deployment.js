@@ -54,7 +54,8 @@ function checkDeployment (client, namespace, name, outcome, resolve, wait) {
   }, ms)
 }
 
-function createDeployment (client, deployment) {
+function createDeployment (client, deletes, deployment) {
+  const kind = deployment.kind.toLowerCase()
   const namespace = deployment.metadata.namespace || 'default'
   const name = deployment.metadata.name
   let create = (resolve, reject) =>
@@ -85,12 +86,14 @@ function createDeployment (client, deployment) {
                   resolve,
                   reject
                 )
-            } else {
+            } else if (diffs.canReplace(diff)) {
               replaceDeployment(client, namespace, name, deployment)
                 .then(
                   resolve,
                   reject
                 )
+            } else {
+              deletes[kind](client, namespace, name)
             }
           }
         },
@@ -193,9 +196,9 @@ function upgradeDeployment (client, namespace, name, image, container) {
   })
 }
 
-module.exports = function (client) {
+module.exports = function (client, deletes) {
   return {
-    create: createDeployment.bind(null, client),
+    create: createDeployment.bind(null, client, deletes),
     delete: deleteDeployment.bind(null, client),
     getByNamespace: getDeploymentsByNamespace.bind(null, client),
     list: listDeployments.bind(null, client),

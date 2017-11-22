@@ -5,9 +5,21 @@ const core = require('./core')
 const diffs = require('./specDiff')
 const parse = require('../imageParser').parse
 
+const GROUPS = {
+  '1.4': 'apps/v1beta1',
+  '1.5': 'apps/v1beta1',
+  '1.6': 'apps/v1beta1',
+  '1.7': 'apps/v1beta1',
+  '1.8': 'apps/v1beta2'
+}
+
+function group (client) {
+  return GROUPS[client.version]
+}
+
 function base (client, namespace) {
   return client
-    .group('apps')
+    .group(group(client))
     .ns(namespace)
 }
 
@@ -84,10 +96,16 @@ function createStatefulSet (client, statefulSet) {
                   resolve,
                   reject
                 )
-            } else {
+            } else if (diffs.canReplace(diff)) {
               replaceStatefulSet(client, namespace, name, statefulSet)
                 .then(
                   resolve,
+                  reject
+                )
+            } else {
+              deleteStatefulSet(client, namespace, name)
+                .then(
+                  create.bind(null, resolve, reject),
                   reject
                 )
             }
@@ -192,9 +210,9 @@ function upgradeStatefulSet (client, namespace, name, image, container) {
   })
 }
 
-module.exports = function (client) {
+module.exports = function (client, deletes) {
   return {
-    create: createStatefulSet.bind(null, client),
+    create: createStatefulSet.bind(null, client, deletes),
     delete: deleteStatefulSet.bind(null, client),
     getByNamespace: getStatefulSetsByNamespace.bind(null, client),
     list: listStatefulSets.bind(null, client),

@@ -5,9 +5,21 @@ const core = require('./core')
 const diffs = require('./specDiff')
 const parse = require('../imageParser').parse
 
+const GROUPS = {
+  '1.4': 'extensions/v1beta1',
+  '1.5': 'extensions/v1beta1',
+  '1.6': 'extensions/v1beta1',
+  '1.7': 'extensions/v1beta1',
+  '1.8': 'apps/v1beta2'
+}
+
+function group (client) {
+  return GROUPS[client.version]
+}
+
 function base (client, namespace) {
   return client
-    .group('extensions')
+    .group(group(client))
     .ns(namespace)
 }
 
@@ -52,7 +64,7 @@ function checkDaemonSet (client, namespace, name, outcome, resolve, wait) {
   }, ms)
 }
 
-function createDaemonSet (client, daemonSet) {
+function createDaemonSet (client, deletes, daemonSet) {
   const namespace = daemonSet.metadata.namespace || 'default'
   const name = daemonSet.metadata.name
 
@@ -68,7 +80,7 @@ function createDaemonSet (client, daemonSet) {
     )
 
   return new Promise((resolve, reject) => {
-    client.single(client, namespace, name).get()
+    single(client, namespace, name).get()
       .then(
         loaded => {
           const diff = diffs.simple(loaded, daemonSet)
@@ -84,10 +96,16 @@ function createDaemonSet (client, daemonSet) {
                   resolve,
                   reject
                 )
-            } else {
+            } else if (diffs.canReplace(diff)) {
               replaceDaemonSet(client, namespace, name, daemonSet)
                 .then(
                   resolve,
+                  reject
+                )
+            } else {
+              deleteDaemonSet(client, namespace, name)
+                .then(
+                  create.bind(null, resolve, reject),
                   reject
                 )
             }
@@ -194,9 +212,9 @@ function updateDaemonSet (client, namespace, name, image, container) {
   })
 }
 
-module.exports = function (client) {
+module.exports = function (client, deletes) {
   return {
-    create: createDaemonSet.bind(null, client),
+    create: createDaemonSet.bind(null, client, deletes),
     delete: deleteDaemonSet.bind(null, client),
     getByNamespace: getDaemonSetsByNamespace.bind(null, client),
     list: listDaemonSets.bind(null, client),

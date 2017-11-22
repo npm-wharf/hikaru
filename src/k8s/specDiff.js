@@ -12,8 +12,14 @@ const IGNORE_LIST = {
   hostPath: 'type'
 }
 
+const UNPATCHABLE_TYPES = ['job', 'cronjob', 'service']
+const UNREPLACEABLE_TYPES = ['job', 'cronjob']
+
 function canPatch (diff, type) {
-  if (type && type === 'job') {
+  if (type && UNPATCHABLE_TYPES.indexOf(type) >= 0) {
+    return false
+  }
+  if (diff.kind) {
     return false
   }
   if (diff.spec && diff.spec.clusterIP) {
@@ -23,7 +29,10 @@ function canPatch (diff, type) {
 }
 
 function canReplace (diff, type) {
-  if (type && type === 'job') {
+  if (type && UNREPLACEABLE_TYPES.indexOf(type) >= 0) {
+    return false
+  }
+  if (diff.kind) {
     return false
   }
   if (diff.spec && diff.spec.clusterIP) {

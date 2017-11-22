@@ -68,7 +68,7 @@ function checkJob (client, namespace, name, outcome, resolve, reject, wait) {
   }, ms)
 }
 
-function createJob (client, jobSpec) {
+function createJob (client, deletes, jobSpec) {
   const namespace = jobSpec.metadata.namespace || 'default'
   const name = jobSpec.metadata.name
   let create = (resolve, reject) =>
@@ -170,9 +170,9 @@ function updateJob (client, namespace, name, diff) {
   })
 }
 
-module.exports = function (client) {
+module.exports = function (client, deletes) {
   return {
-    create: createJob.bind(null, client),
+    create: createJob.bind(null, client, deletes),
     delete: deleteJob.bind(null, client),
     list: listJobs.bind(null, client),
     replace: replaceJob.bind(null, client),
