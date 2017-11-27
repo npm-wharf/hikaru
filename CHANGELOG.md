@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.5.1"></a>
+## [1.5.1](https://github.com/npm-wharf/hikaru/compare/v1.5.0...v1.5.1) (2017-11-27)
+
+
+### Bug Fixes
+
+* enable service updates by including clusterIP when available in the original ([d927d93](https://github.com/npm-wharf/hikaru/commit/d927d93))
+
+
+
 <a name="1.5.0"></a>
 # [1.5.0](https://github.com/npm-wharf/hikaru/compare/v1.4.3...v1.5.0) (2017-11-27)
 
