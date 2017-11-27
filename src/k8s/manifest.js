@@ -39,10 +39,10 @@ function checkManifest (client, manifest, outcome, resolve, limit, wait) {
     single(client, manifest).get()
       .then(
         result => {
-          log.debug(`service '${namespace}.${name}' status - '${JSON.stringify(result.status, null, 2)}'`)
-          if (outcome === 'creation' && result.status.loadBalancer) {
+          log.debug(`service '${namespace}.${name}' status - '${JSON.stringify(result, null, 2)}'`)
+          if (outcome === 'creation' && result.status) {
             resolve(result)
-          } else if (outcome === 'update' && result.status.loadBalancer) {
+          } else if (outcome === 'update' && result.status) {
             resolve(result)
           } else if (limit <= 0) {
             resolve(result)
