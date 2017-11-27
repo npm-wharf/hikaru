@@ -4,7 +4,7 @@ os:
   - linux
 
 before_script:
-  - npm i dockyard@latest -g
+  - npm i @npm-wharf/shipwright@latest -g
 
 script:
   - nyc npm test && nyc report --reporter=text-lcov | coveralls
@@ -14,4 +14,4 @@ node_js:
 
 after_success:
   - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
-  - dockyard build image --repo=npmwharf --name=hikaru
+  - shipwright build image --repo=npmwharf --name=hikaru --cache-from-latest --tags=lm,lt,v,ma,miv
