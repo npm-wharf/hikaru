@@ -1,4 +1,4 @@
-const mcgonagall = require('mcgonagall')
+const mcgonagall = require('@npm-wharf/mcgonagall')
 const hikaru = require('./index')
 const config = require('./config')()
 const fount = require('fount')
