@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.5.0"></a>
+# [1.5.0](https://github.com/npm-wharf/hikaru/compare/v1.4.3...v1.5.0) (2017-11-27)
+
+
+### Bug Fixes
+
+* adding deployment api group versioning to deployment commands ([cb3393a](https://github.com/npm-wharf/hikaru/commit/cb3393a))
+* correct anonymous manifest status check approach ([ebe7e5e](https://github.com/npm-wharf/hikaru/commit/ebe7e5e))
+* correct namespaces for daemonset, delete when replace is unavailable on all resources, update mcgonagall version ([f33020a](https://github.com/npm-wharf/hikaru/commit/f33020a))
+
+
+### Features
+
+* add alias command ([e149484](https://github.com/npm-wharf/hikaru/commit/e149484))
+* add scale flag to support scale factoring ([56bd61f](https://github.com/npm-wharf/hikaru/commit/56bd61f))
+
+
+
 <a name="1.4.3"></a>
 ## [1.4.3](https://github.com/npm-wharf/hikaru/compare/v1.4.2...v1.4.3) (2017-11-21)
 
