@@ -36,7 +36,7 @@ hikaru also does not accept docker credentials nor will it store and fetch them.
 
 # Complimentary Tooling
 
-hikaru requires [mcgonagall](https://github.com/npm-wharf/mcgonagall) style cluster specifications. You'll get the most mileage out of it by adopting [Dockyard](https://github.com/npm-wharf/dockyard) to build your Docker images or at least using a compatible tagging approach (see: [buildgoggles](https://www.npmjs.com/package/buildgoggles)). These complimentary aspects come largely from how hikaru infers metadata about Kubernetes resources based on the Docker image name and tag.
+hikaru requires [mcgonagall](https://github.com/npm-wharf/mcgonagall) style cluster specifications. You'll get the most mileage out of it by adopting [shipwright](https://github.com/npm-wharf/shipwright) to build your Docker images or at least using a compatible tagging approach (see: [buildgoggles](https://www.npmjs.com/package/buildgoggles)). These complimentary aspects come largely from how hikaru infers metadata about Kubernetes resources based on the Docker image name and tag.
 
 # Modes
 
