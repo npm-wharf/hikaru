@@ -5,9 +5,21 @@ const core = require('./core')
 const diffs = require('./specDiff')
 const parse = require('../imageParser').parse
 
+const GROUPS = {
+  '1.4': 'extensions/v1beta1',
+  '1.5': 'extensions/v1beta1',
+  '1.6': 'apps/v1beta1',
+  '1.7': 'apps/v1beta1',
+  '1.8': 'apps/v1beta2'
+}
+
+function group (client) {
+  return GROUPS[client.version]
+}
+
 function base (client, namespace) {
   return client
-    .group('apps')
+    .group(group(client))
     .ns(namespace)
 }
 
