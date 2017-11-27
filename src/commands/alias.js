@@ -1,13 +1,7 @@
 const bole = require('bole')
-const inquire = require('./inquire')
 
-function build (config, aliasCache) {
+function build (config) {
   return {
-    alias: {
-      alias: 'a',
-      describe: 'an alias for a kubernetes cluster that hikaru has credentials for',
-      choices: aliasCache.listAliases()
-    },
     url: {
       alias: 'k',
       describe: 'url to the kubernetes cluster',
@@ -44,19 +38,12 @@ function build (config, aliasCache) {
     key: {
       describe: 'path to the key file to authenticate the client',
       default: config.keyFile
-    },
-    verbose: {
-      describe: 'output verbose logging (shows status checks)',
-      default: false
-    },
-    tokenFile: {
-      alias: 'f',
-      describe: 'supply a key/value file for any tokens in the specification'
     }
   }
 }
 
 function handle (config, hikaru, readFile, aliasCache, debugOut, argv) {
+  config.alias = argv.name
   if (argv.ca) {
     config.ca = readFile(argv.ca)
   }
@@ -81,54 +68,27 @@ function handle (config, hikaru, readFile, aliasCache, debugOut, argv) {
   if (argv.apiVersion) {
     config.version = argv.apiVersion
   }
-  if (argv.alias) {
-    const cached = aliasCache.getAlias(argv.alias)
-    Object.assign(config, cached)
-  }
-
-  const options = {
-    version: config.version
-  }
-
-  if (argv.tokenFile) {
-    options.data = inquire.loadTokens(argv.tokenFile)
-  }
-  if (config.scale) {
-    options.scale = config.scale
-  }
 
   bole.output({
     level: argv.verbose ? 'debug' : 'info',
     stream: debugOut
   })
 
-  hikaru.removeCluster(argv.source, options)
+  hikaru.aliasCluster(aliasCache, config)
     .then(
-      () => console.log('done'),
-      err => {
-        if (err.tokens) {
-          console.log(`${err.tokens.length} tokens were found in the specification. When prompted, please provide a value for each.`)
-          inquire.acquireTokens(err.tokens)
-            .then(
-              tokens => {
-                return hikaru.removeCluster(err.specPath, {
-                  data: tokens
-                })
-              }
-            )
-        } else {
-          console.error(`There was a problem in the specification at '${argv.source}'.\n ${err}`)
-          process.exit(100)
-        }
+      () => console.log(`Alias '${config.alias}' for '${config.url}' was written to '${aliasCache.cacheFile}' successfully.`),
+      () => {
+        console.error(`There was a problem connecting to '${config.url}' with the information provided, alias was not created.`)
+        process.exit(100)
       }
     )
 }
 
 module.exports = function (config, hikaru, readFile, aliasCache, debugOut) {
   return {
-    command: 'remove <source> [options]',
-    desc: 'removes the source specification from a kubernetes cluster',
-    builder: build(config, aliasCache),
+    command: 'alias <name> [options]',
+    desc: 'creates an alias for a kubernetes cluster and its auth for use in other commands',
+    builder: build(config),
     handler: handle.bind(null, config, hikaru, readFile, aliasCache, debugOut)
   }
 }

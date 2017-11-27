@@ -428,7 +428,7 @@ hikaru deploy {spec} \
   --key {path to client key} \
   --scale {scaleLabel} \
   --saveDiffs \
-  --debug
+  --verbose
 ```
 
 ## Removing Clusters
@@ -443,7 +443,7 @@ hikaru deploy {spec} \
   --ca {path to cluster CA} \
   --cert {path to client cert} \
   --key {path to client key} \
-  --debug
+  --verbose
 ```
 
 ## Upgrading Images
@@ -470,7 +470,7 @@ hikaru upgrade {image} \
   --ca {path to cluster CA} \
   --cert {path to client cert} \
   --key {path to client key} \
-  --debug
+  --verbose
 ```
 
 ## Getting Upgrade Candidates
@@ -497,7 +497,7 @@ hikaru candidates {image} \
   --ca {path to cluster CA} \
   --cert {path to client cert} \
   --key {path to client key} \
-  --debug
+  --verbose
 ```
 
 ## Finding Resources By Image
@@ -511,7 +511,23 @@ hikaru findByImage {image} \
   --ca {path to cluster CA} \
   --cert {path to client cert} \
   --key {path to client key} \
-  --debug
+  --verbose
+```
+
+## Aliasing Clusters and Caching Credentials
+
+*If* you are comfortable storing cluster credentials in your home directory, you can use hikaru's `login` command to alias a kubernetes cluster endpoint and the auth information under an alias. This will allow you to use the alias argument (`--alias` or `-a`) so that you won't have to provide the url, auth or even version argument to each of the other commands
+
+```shell
+hikaru alias \
+  --url {kubernetes url} \
+  --user {username} \
+  --password {password} \
+  --token {token} \
+  --ca {path to cluster CA} \
+  --cert {path to client cert} \
+  --key {path to client key} \
+  --version {api version for the cluster}
 ```
 
 # Library

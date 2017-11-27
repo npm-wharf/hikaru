@@ -281,9 +281,13 @@ function getContainer (k8s, resources) {
       _.values(resources),
       o => o.kind != undefined // eslint-disable-line eqeqeq
     )
-    const kind = manifest.kind.toLowerCase()
-    log.info(`    creating ${kind} '${manifest.metadata.name}'`)
-    return k8s.createManifest(manifest)
+    if (manifest) {
+      const kind = manifest.kind.toLowerCase()
+      log.info(`    creating ${kind} '${manifest.metadata.name}'`)
+      return k8s.createManifest(manifest)
+    } else {
+      return Promise.resolve()
+    }
   }
 }
 
@@ -344,6 +348,10 @@ function getImageMetadataForNamespace (k8s, namespace, options = {}) {
       return Object.assign({}, deployments, daemons, sets)
     }
   )
+}
+
+function getNamespaces (k8s) {
+  return k8s.listNamespaces()
 }
 
 function getUpgradeCandidates (k8s, image, options = {filter: ['imageName', 'imageOwner', 'owner', 'repo', 'branch']}) {
@@ -620,6 +628,7 @@ module.exports = function (k8s) {
     getContainerSpec: getContainerSpec.bind(null, k8s),
     getImageMetadata: getImageMetadata.bind(null, k8s),
     getImageMetadataForNamespace: getImageMetadataForNamespace.bind(null, k8s),
+    getNamespaces: getNamespaces.bind(null, k8s),
     getUpgradeCandidates: getUpgradeCandidates.bind(null, k8s),
     match: match,
     removeCluster: removeCluster.bind(null, k8s),

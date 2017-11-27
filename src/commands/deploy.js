@@ -1,8 +1,13 @@
 const bole = require('bole')
 const inquire = require('./inquire')
 
-function build (config) {
+function build (config, aliasCache) {
   return {
+    alias: {
+      alias: 'a',
+      describe: 'an alias for a kubernetes cluster that hikaru has credentials for',
+      choices: aliasCache.listAliases()
+    },
     url: {
       alias: 'k',
       describe: 'url to the kubernetes cluster',
@@ -63,7 +68,7 @@ function build (config) {
   }
 }
 
-function handle (config, hikaru, readFile, debugOut, argv) {
+function handle (config, hikaru, readFile, aliasCache, debugOut, argv) {
   if (argv.ca) {
     config.ca = readFile(argv.ca)
   }
@@ -91,6 +96,10 @@ function handle (config, hikaru, readFile, debugOut, argv) {
   if (argv.scale) {
     config.scale = argv.scale
   }
+  if (argv.alias) {
+    const cached = aliasCache.getAlias(argv.alias)
+    Object.assign(config, cached)
+  }
 
   config.saveDiffs = argv.saveDiffs
 
@@ -100,6 +109,9 @@ function handle (config, hikaru, readFile, debugOut, argv) {
 
   if (argv.tokenFile) {
     options.data = inquire.loadTokens(argv.tokenFile)
+  }
+  if (config.scale) {
+    options.scale = config.scale
   }
 
   bole.output({
@@ -134,11 +146,11 @@ function handle (config, hikaru, readFile, debugOut, argv) {
     )
 }
 
-module.exports = function (config, hikaru, readFile, debugOut) {
+module.exports = function (config, hikaru, readFile, aliasCache, debugOut) {
   return {
     command: 'deploy <source> [options]',
     desc: 'deploys the source specification to a kubernetes cluster',
-    builder: build(config),
-    handler: handle.bind(null, config, hikaru, readFile, debugOut)
+    builder: build(config, aliasCache),
+    handler: handle.bind(null, config, hikaru, readFile, aliasCache, debugOut)
   }
 }

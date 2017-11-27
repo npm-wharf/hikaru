@@ -6,6 +6,9 @@ const fs = require('fs')
 const path = require('path')
 const chalk = require('chalk')
 
+const FILE_PATH = path.join(process.env.HOME, '.hikaru')
+const aliasCache = require('../src/aliasCache')(FILE_PATH)
+
 const levelColors = {
   debug: 'gray',
   info: 'white',
@@ -32,8 +35,9 @@ const debugOut = {
 
 require('yargs') // eslint-disable-line no-unused-expressions
   .usage('$0 <command> [options]')
-  .command(require('../src/commands/deploy')(config, hikaru, readFile, debugOut))
-  .command(require('../src/commands/remove')(config, hikaru, readFile, debugOut))
+  .command(require('../src/commands/alias')(config, hikaru, readFile, aliasCache, debugOut))
+  .command(require('../src/commands/deploy')(config, hikaru, readFile, aliasCache, debugOut))
+  .command(require('../src/commands/remove')(config, hikaru, readFile, aliasCache, debugOut))
   .demandCommand(1, 'The command?')
   .help()
   .version()
