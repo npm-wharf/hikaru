@@ -66,7 +66,7 @@ function checkStatefulSet (client, namespace, name, outcome, resolve, wait) {
   }, ms)
 }
 
-function createStatefulSet (client, statefulSet) {
+function createStatefulSet (client, deletes, statefulSet) {
   const namespace = statefulSet.metadata.namespace || 'default'
   const name = statefulSet.metadata.name
   let create = (resolve, reject) =>
