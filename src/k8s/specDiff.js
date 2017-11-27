@@ -25,6 +25,12 @@ function canPatch (diff, type) {
   if (diff.spec && diff.spec.clusterIP) {
     return false
   }
+  if (hasContainerPort(diff)) {
+    return false
+  }
+  if (hasServicePort(diff)) {
+    return false
+  }
   return true
 }
 
@@ -129,6 +135,24 @@ function isBackoffOnly (diff, job) {
   return _.isEqual(diff, template)
 }
 
+function hasContainerPort (diff) {
+  const containers = (((diff.spec || {})
+                      .template || {})
+                      .spec || {})
+                      .containers || []
+  return _.find(containers, c => {
+    return _.find(c.ports || [], p => {
+      return p.containerPort
+    })
+  })
+}
+
+function hasServicePort (diff) {
+  const ports = (diff.spec || {})
+                      .ports || []
+  return ports.length
+}
+
 function saveDiff (a, b, diff) {
   const relative = path.join(process.cwd(), 'diff')
   const namespace = a.metadata.namespace
@@ -177,6 +201,10 @@ function simpleDiff (a, b, k) {
     }
     if (!_.isEmpty(diffs) && b.name && b.name === a.name) {
       diffs.name = b.name
+    }
+    if (a.clusterIP && a.type === 'ClusterIP') {
+      diffs.clusterIP = a.clusterIP
+      diffs.type = 'ClusterIP'
     }
     return diffs
   } else {

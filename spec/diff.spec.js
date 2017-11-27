@@ -289,6 +289,32 @@ describe('Spec Differences', function () {
       const diff = simple(a, b)
       diff.should.eql({})
     })
+
+    it('should include clusterIP in diff when included', function () {
+      const svcOrig = {
+        kind: 'Service',
+        spec: {
+          clusterIP: '10.39.245.246',
+          type: 'ClusterIP',
+          sessionAffinity: 'None'
+        }
+      }
+
+      const svcNew = {
+        kind: 'Service',
+        spec: {
+          sessionAffinity: 'None'
+        }
+      }
+
+      const diff = simple(svcOrig, svcNew)
+      diff.should.eql({
+        spec: {
+          clusterIP: '10.39.245.246',
+          type: 'ClusterIP'
+        }
+      })
+    })
   })
 
   describe('complex diffs', function () {
@@ -481,6 +507,46 @@ describe('Spec Differences', function () {
           clusterIP: 'None'
         }
       }).should.equal(false)
+    })
+
+    it('should return false for patch and true for replace when port is included', function () {
+      canPatch({
+        spec: {
+          template: {
+            spec: {
+              containers: [
+                {
+                  ports: [
+                    {
+                      name: 'http',
+                      containerPort: 8028
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }).should.equal(false)
+
+      canReplace({
+        spec: {
+          template: {
+            spec: {
+              containers: [
+                {
+                  ports: [
+                    {
+                      name: 'http',
+                      containerPort: 8028
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }).should.equal(true)
     })
   })
 
