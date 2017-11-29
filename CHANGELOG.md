@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.5.5"></a>
+## [1.5.5](https://github.com/npm-wharf/hikaru/compare/v1.5.1...v1.5.5) (2017-11-29)
+
+
+### Bug Fixes
+
+* added deletes param to createStatefulSet ([4d26589](https://github.com/npm-wharf/hikaru/commit/4d26589))
+* correct import of mcgonagall in HTTP server to use new org name ([fb12510](https://github.com/npm-wharf/hikaru/commit/fb12510))
+
+
+
+<a name="1.5.4"></a>
+## [1.5.4](https://github.com/npm-wharf/hikaru/compare/v1.5.1...v1.5.4) (2017-11-29)
+
+
+### Bug Fixes
+
+* added deletes param to createStatefulSet ([4d26589](https://github.com/npm-wharf/hikaru/commit/4d26589))
+* correct import of mcgonagall in HTTP server to use new org name ([fb12510](https://github.com/npm-wharf/hikaru/commit/fb12510))
+
+
+
 <a name="1.5.3"></a>
 ## [1.5.3](https://github.com/npm-wharf/hikaru/compare/v1.5.2...v1.5.3) (2017-11-27)
 
