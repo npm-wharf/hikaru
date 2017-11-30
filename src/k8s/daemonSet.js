@@ -43,7 +43,7 @@ function checkDaemonSet (client, namespace, name, outcome, resolve, wait) {
       .then(
         result => {
           log.debug(`daemonSet '${namespace}.${name}' status - '${JSON.stringify(result.status, null, 2)}'`)
-          if (outcome === 'creation' && result.status.readyReplicas > 0) {
+          if ((outcome === 'creation' || outcome === 'update') && result.status.numberReady === result.status.desiredNumberScheduled) {
             resolve(result)
           } else if (outcome === 'deletion' && result.status.phase !== 'Terminating') {
             resolve(result)
