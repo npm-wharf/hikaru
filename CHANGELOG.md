@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.5.6"></a>
+## [1.5.6](https://github.com/npm-wharf/hikaru/compare/v1.5.1...v1.5.6) (2017-11-30)
+
+
+### Bug Fixes
+
+* added deletes param to createStatefulSet ([4d26589](https://github.com/npm-wharf/hikaru/commit/4d26589))
+* change to how daemonset status checks are implemented ([227bd8a](https://github.com/npm-wharf/hikaru/commit/227bd8a))
+* correct import of mcgonagall in HTTP server to use new org name ([fb12510](https://github.com/npm-wharf/hikaru/commit/fb12510))
+
+
+
 <a name="1.5.5"></a>
 ## [1.5.5](https://github.com/npm-wharf/hikaru/compare/v1.5.1...v1.5.5) (2017-11-29)
 
