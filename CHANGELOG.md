@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.6.0"></a>
+# [1.6.0](https://github.com/npm-wharf/hikaru/compare/v1.5.6...v1.6.0) (2017-12-08)
+
+
+### Features
+
+* default alias cache to /tmp if no $HOME ([#4](https://github.com/npm-wharf/hikaru/issues/4)) ([67dfbe4](https://github.com/npm-wharf/hikaru/commit/67dfbe4))
+
+
+
 <a name="1.5.6"></a>
 ## [1.5.6](https://github.com/npm-wharf/hikaru/compare/v1.5.1...v1.5.6) (2017-11-30)
 
