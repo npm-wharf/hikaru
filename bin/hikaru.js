@@ -6,7 +6,7 @@ const fs = require('fs')
 const path = require('path')
 const chalk = require('chalk')
 
-const FILE_PATH = path.join(process.env.HOME, '.hikaru')
+const FILE_PATH = path.join(process.env.HOME || '/tmp', '.hikaru')
 const aliasCache = require('../src/aliasCache')(FILE_PATH)
 
 const levelColors = {
