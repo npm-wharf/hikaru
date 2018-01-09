@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.5.7"></a>
+## [1.5.7](https://github.com/npm-wharf/hikaru/compare/v1.5.6...v1.5.7) (2018-01-09)
+
+
+### Bug Fixes
+
+* allow raw manifests to correctly target ClusterRoles and ClusterRoleBindings ([4d8f4aa](https://github.com/npm-wharf/hikaru/commit/4d8f4aa))
+
+
+
 <a name="1.5.6"></a>
 ## [1.5.6](https://github.com/npm-wharf/hikaru/compare/v1.5.1...v1.5.6) (2017-11-30)
 
