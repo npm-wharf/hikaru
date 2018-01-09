@@ -6,6 +6,10 @@ const pluralize = require('pluralize')
 
 function base (client, manifest) {
   const namespace = manifest.metadata.namespace || 'default'
+  if (/^ClusterRole/.test(manifest.kind)) {
+    return client
+      .group(manifest.apiVersion)
+  }
   return client
     .group(manifest.apiVersion)
     .ns(namespace)
