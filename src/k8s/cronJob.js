@@ -15,7 +15,7 @@ function group (client) {
 function base (client, namespace) {
   return client
     .group(group(client))
-    .namespace(namespace)
+    .ns(namespace)
 }
 
 function single (client, namespace, name) {

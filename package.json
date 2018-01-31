@@ -1,13 +1,13 @@
 {
   "name": "@npm-wharf/hikaru",
-  "version": "1.7.0",
+  "version": "1.6.1",
   "description": "A continuous deployment service and integration helper for kubernetes",
   "main": "src/index.js",
   "bin": {
     "hikaru": "./bin/hikaru.js"
   },
   "dependencies": {
-    "@npm-wharf/mcgonagall": "1.5.x",
+    "@npm-wharf/mcgonagall": "1.6.x",
     "auto-kubernetes-client": "^0.4.3",
     "bluebird": "^3.5.1",
     "bole": "^3.0.2",

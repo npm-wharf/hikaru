@@ -2,19 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
-<a name="1.7.0"></a>
-# [1.7.0](https://github.com/npm-wharf/hikaru/compare/v1.5.6...v1.7.0) (2018-01-09)
+<a name="1.6.1"></a>
+# [1.6.1](https://github.com/npm-wharf/hikaru/compare/v1.6.0...v1.6.1) (2018-01-09)
 
 
 ### Bug Fixes
 
 * allow raw manifests to correctly target ClusterRoles and ClusterRoleBindings ([8c49c85](https://github.com/npm-wharf/hikaru/commit/8c49c85))
-
-
-### Features
-
-* default alias cache to /tmp if no $HOME ([#4](https://github.com/npm-wharf/hikaru/issues/4)) ([67dfbe4](https://github.com/npm-wharf/hikaru/commit/67dfbe4))
-
 
 
 <a name="1.6.0"></a>
