@@ -42,7 +42,10 @@ function checkCronJob (client, namespace, name, outcome, resolve, reject, wait) 
             const status = result.status.conditions && result.status.conditions.length
                               ? result.status.conditions[0] : {}
             if (outcome === 'completion') {
-              if (status.type === 'Complete' && status.status === 'True') {
+              if (result.status === undefined || Object.keys(result.status).length === 0) {
+                log.info(`cron job appears to have created successfully but did not run (according to schedule)`)
+                resolve(result)
+              } else if (status.type === 'Complete' && status.status === 'True') {
                 resolve(result)
               } else if (status.type === 'Failed' && status.status === 'True') {
                 reject(new Error(`CronJob '${namespace}.${name}' failed to complete with status: '${JSON.stringify(result.status, null, 2)}'`))
@@ -50,7 +53,10 @@ function checkCronJob (client, namespace, name, outcome, resolve, reject, wait) 
                 checkCronJob(client, namespace, name, outcome, resolve, reject, next)
               }
             } else if (outcome === 'updated') {
-              if (status.type === 'Complete' && status.status === 'True') {
+              if (result.status === undefined || Object.keys(result.status).length === 0) {
+                log.info(`cron job appears to have updated successfully but did not run (according to schedule)`)
+                resolve(result)
+              } else if (status.type === 'Complete' && status.status === 'True') {
                 resolve(result)
               } else if (status.type === 'Failed' && status.status === 'True') {
                 reject(new Error(`CronJob '${namespace}.${name}' failed to update with status: '${JSON.stringify(result.status, null, 2)}'`))
