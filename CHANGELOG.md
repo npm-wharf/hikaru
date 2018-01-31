@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.6.3"></a>
+## [1.6.3](https://github.com/npm-wharf/hikaru/compare/v1.6.2...v1.6.3) (2018-01-31)
+
+
+### Bug Fixes
+
+* allow cronjobs that do not run to still get recognized as created during cluster deploy ([6ca4d4e](https://github.com/npm-wharf/hikaru/commit/6ca4d4e))
+
+
+
 <a name="1.6.2"></a>
 ## [1.6.2](https://github.com/npm-wharf/hikaru/compare/v1.6.1...v1.6.2) (2018-01-31)
 
