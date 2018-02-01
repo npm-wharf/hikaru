@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.6.4"></a>
+## [1.6.4](https://github.com/npm-wharf/hikaru/compare/v1.6.3...v1.6.4) (2018-02-01)
+
+
+### Bug Fixes
+
+* update mcgonagall version to 1.7.x ([774a7bb](https://github.com/npm-wharf/hikaru/commit/774a7bb))
+
+
+
 <a name="1.6.3"></a>
 ## [1.6.3](https://github.com/npm-wharf/hikaru/compare/v1.6.2...v1.6.3) (2018-01-31)
 
