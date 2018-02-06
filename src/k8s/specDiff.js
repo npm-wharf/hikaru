@@ -142,7 +142,7 @@ function hasContainerPort (diff) {
                       .containers || []
   return _.find(containers, c => {
     return _.find(c.ports || [], p => {
-      return p.containerPort
+      return p.containerPort || p.name
     })
   })
 }

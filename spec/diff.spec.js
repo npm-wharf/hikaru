@@ -529,6 +529,24 @@ describe('Spec Differences', function () {
         }
       }).should.equal(false)
 
+      canPatch({
+        spec: {
+          template: {
+            spec: {
+              containers: [
+                {
+                  ports: [
+                    {
+                      name: 'http'
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }).should.equal(false)
+
       canReplace({
         spec: {
           template: {
@@ -539,6 +557,24 @@ describe('Spec Differences', function () {
                     {
                       name: 'http',
                       containerPort: 8028
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }).should.equal(true)
+
+      canReplace({
+        spec: {
+          template: {
+            spec: {
+              containers: [
+                {
+                  ports: [
+                    {
+                      name: 'http'
                     }
                   ]
                 }
