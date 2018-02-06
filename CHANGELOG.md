@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.6.5"></a>
+## [1.6.5](https://github.com/npm-wharf/hikaru/compare/v1.6.4...v1.6.5) (2018-02-06)
+
+
+### Bug Fixes
+
+* replace on diffs that have containers with port name changes instead of attempting patches (which will fail) ([a49ec11](https://github.com/npm-wharf/hikaru/commit/a49ec11))
+
+
+
 <a name="1.6.4"></a>
 ## [1.6.4](https://github.com/npm-wharf/hikaru/compare/v1.6.3...v1.6.4) (2018-02-01)
 
