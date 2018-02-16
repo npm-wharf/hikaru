@@ -38,6 +38,7 @@ module.exports = function (client) {
   const job = require('./job')(client, deletes)
   const manifest = require('./manifest')(client)
   const namespace = require('./namespace')(client)
+  const role = require('./role')(client)
   const roleBinding = require('./roleBinding')(client)
   const service = require('./service')(client, deletes)
   const statefulSet = require('./statefulSet')(client, deletes)
@@ -46,7 +47,10 @@ module.exports = function (client) {
   deletes.daemonSet = daemonSet.delete
   deletes.deployment = deployment.delete
   deletes.job = job.delete
+  deletes.role = role.delete
+  deletes.roleBinding = roleBinding.delete
   deletes.service = service.delete
+  deletes.serviceAccount = account.delete
   deletes.statefulSet = statefulSet.delete
 
   return {
@@ -96,6 +100,10 @@ module.exports = function (client) {
     createNamespace: namespace.create,
     deleteNamespace: namespace.delete,
     listNamespaces: namespace.list,
+
+    createRole: role.create,
+    deleteRole: role.delete,
+    listRoles: role.list,
 
     createRoleBinding: roleBinding.create,
     deleteRoleBinding: roleBinding.delete,

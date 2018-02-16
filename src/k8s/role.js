@@ -25,44 +25,44 @@ function base (client, namespace) {
 function single (client, name, namespace) {
   if (namespace) {
     return base(client, namespace)
-      .rolebinding(name)
+      .role(name)
   } else {
     return base(client)
-      .clusterrolebinding(name)
+      .clusterrole(name)
   }
 }
 
 function multiple (client, namespace) {
   if (namespace) {
     return base(client, namespace)
-      .rolebindings
+      .roles
   } else {
     return base(client)
-      .clusterrolebindings
+      .clusterroles
   }
 }
 
-function createRoleBinding (client, roleBinding) {
-  const namespace = roleBinding.metadata.namespace || 'default'
-  const name = roleBinding.metadata.name
-  const appliedns = roleBinding.kind === 'ClusterRoleBinding'
+function createRole (client, role) {
+  const namespace = role.metadata.namespace || 'default'
+  const name = role.metadata.name
+  const appliedns = role.kind === 'ClusterRole'
     ? undefined : namespace
   return single(client, name, appliedns).get()
     .then(
       () => Promise.resolve(),
       () => {
-        return multiple(client, appliedns).create(roleBinding)
+        return multiple(client, appliedns).create(role)
           .then(
             null,
             err => {
-              throw new Error(`${roleBinding.kind} '${roleBinding.metadata.namespace}.${roleBinding.metadata.name}' failed to create:\n\t${err.message}`)
+              throw new Error(`${role.kind} '${role.metadata.namespace}.${role.metadata.name}' failed to create:\n\t${err.message}`)
             }
           )
       }
     )
 }
 
-function deleteRoleBinding (client, namespace, name) {
+function deleteRole (client, namespace, name) {
   return single(client, name, namespace).get()
     .then(
       (spec) => {
@@ -78,30 +78,30 @@ function deleteRoleBinding (client, namespace, name) {
     )
 }
 
-function listRoleBindings (client, namespace) {
-  let getClusterBindings = () => {
+function listRoles (client, namespace) {
+  let getClusterRoles = () => {
     return client
       .group(group(client))
       .clusterrolebindings
       .list()
   }
 
-  let getBindings = () => {
+  let getRoles = () => {
     return client
       .group(group(client))
       .rolebindings
       .list()
   }
 
-  return join(getClusterBindings(), getBindings(), (cluster, plain) => {
+  return join(getClusterRoles(), getRoles(), (cluster, plain) => {
     return cluster.concat(plain)
   })
 }
 
 module.exports = function (client) {
   return {
-    create: createRoleBinding.bind(null, client),
-    delete: deleteRoleBinding.bind(null, client),
-    list: listRoleBindings.bind(null, client)
+    create: createRole.bind(null, client),
+    delete: deleteRole.bind(null, client),
+    list: listRoles.bind(null, client)
   }
 }

@@ -7,6 +7,20 @@ const compare = require('./imageComparer').compare
 
 const RESERVED_NAMESPACES = ['default', 'kube-system', 'kube-public']
 const MATCH_KEYS = ['imageOwner', 'imageName', 'owner', 'repo', 'branch']
+const MANIFEST_KIND_FILTER = [
+  'ClusterRole',
+  'ClusterRoleBinding',
+  'ConfigMap',
+  'CronJob',
+  'DaemonSet',
+  'Deployment',
+  'Job',
+  'Role',
+  'RoleBinding',
+  'Service',
+  'ServiceAccount',
+  'StatefulSet'
+]
 
 function createAccount (k8s, resources) {
   let accountPromise
@@ -75,10 +89,25 @@ function createNamespaces (k8s, cluster) {
   return Promise.all(promises)
 }
 
+function createRole (k8s, resources) {
+  let bindingPromise
+  if (resources.role) {
+    log.info(`    creating role '${resources.roleBinding.metadata.namespace || 'Cluster'}.${resources.roleBinding.metadata.name}'`)
+    bindingPromise = k8s.createRole(resources.role)
+      .then(
+        null,
+        onRoleCreationFailed.bind(null, resources.role)
+      )
+  } else {
+    bindingPromise = Promise.resolve()
+  }
+  return bindingPromise
+}
+
 function createRoleBinding (k8s, resources) {
   let bindingPromise
   if (resources.roleBinding) {
-    log.info(`    creating role binding '${resources.roleBinding.metadata.name}'`)
+    log.info(`    creating role binding '${resources.roleBinding.metadata.namespace || 'Cluster'}.${resources.roleBinding.metadata.name}'`)
     bindingPromise = k8s.createRoleBinding(resources.roleBinding)
       .then(
         null,
@@ -169,6 +198,21 @@ function deleteNamespaces (k8s, cluster) {
   return Promise.all(promises)
 }
 
+function deleteRole (k8s, resources) {
+  let bindingPromise
+  if (resources.role) {
+    log.info(`    deleting role '${resources.roleBinding.metadata.namespace}'.${resources.roleBinding.metadata.name}'`)
+    bindingPromise = k8s.deleteRole(resources.roleBinding)
+      .then(
+        null,
+        onRoleDeletionFailed.bind(null, resources.roleBinding)
+      )
+  } else {
+    bindingPromise = Promise.resolve()
+  }
+  return bindingPromise
+}
+
 function deleteRoleBinding (k8s, resources) {
   let bindingPromise
   if (resources.roleBinding) {
@@ -214,6 +258,11 @@ function deployCluster (k8s, cluster) {
 
 function exitOnError () {
   process.exit(100)
+}
+
+function filterContainerManifests (manifest) {
+  return manifest.kind !== undefined &&
+    MANIFEST_KIND_FILTER.indexOf(manifest.kind) < 0
 }
 
 function findResourcesByImage (k8s, image) {
@@ -279,7 +328,7 @@ function getContainer (k8s, resources) {
   } else {
     const manifest = _.find(
       _.values(resources),
-      o => o.kind != undefined // eslint-disable-line eqeqeq
+      filterContainerManifests
     )
     if (manifest) {
       const kind = manifest.kind.toLowerCase()
@@ -402,9 +451,9 @@ function onAccountCreationFailed (account, err) {
 }
 
 function onAccountCreated (k8s, resources) {
-  return createRoleBinding(k8s, resources)
+  return createRole(k8s, resources)
     .then(
-      onRoleBindingCreated.bind(null, k8s, resources)
+      onRoleCreated.bind(null, k8s, resources)
     )
 }
 
@@ -508,6 +557,30 @@ function onResourcesFailed (err) {
   throw err
 }
 
+function onRoleCreated (k8s, resources) {
+  return createRoleBinding(k8s, resources)
+    .then(
+      onRoleBindingCreated.bind(null, k8s, resources)
+    )
+}
+
+function onRoleDeleted (k8s, resources) {
+  return deleteContainer(k8s, resources)
+    .then(
+      onContainerDeleted.bind(null, k8s, resources)
+    )
+}
+
+function onRoleCreationFailed (role, err) {
+  log.error(`Failed to create role '${role.metadata.namespace || 'Cluster'}.${role.metadata.name}' with error:\n\t${err.message}`)
+  throw err
+}
+
+function onRoleDeletionFailed (role, err) {
+  log.error(`Failed to delete role '${role.metadata.namespace || 'Cluster'}.${role.metadata.name}' with error:\n\t${err.message}`)
+  throw err
+}
+
 function onRoleBindingCreated (k8s, resources) {
   return createContainer(k8s, resources)
     .then(
@@ -516,9 +589,9 @@ function onRoleBindingCreated (k8s, resources) {
 }
 
 function onRoleBindingDeleted (k8s, resources) {
-  return deleteContainer(k8s, resources)
+  return deleteRole(k8s, resources)
     .then(
-      onContainerDeleted.bind(null, k8s, resources)
+      onRoleDeleted.bind(null, k8s, resources)
     )
 }
 
