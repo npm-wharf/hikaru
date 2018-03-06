@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.8.0"></a>
+# [1.8.0](https://github.com/npm-wharf/hikaru/compare/v1.7.0...v1.8.0) (2018-03-06)
+
+
+### Features
+
+* add support for network policies ([c680063](https://github.com/npm-wharf/hikaru/commit/c680063))
+
+
+
 <a name="1.7.0"></a>
 # [1.7.0](https://github.com/npm-wharf/hikaru/compare/v1.6.6...v1.7.0) (2018-02-16)
 
