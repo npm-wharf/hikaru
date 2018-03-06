@@ -15,6 +15,7 @@ const MANIFEST_KIND_FILTER = [
   'DaemonSet',
   'Deployment',
   'Job',
+  'NetworkPolicy',
   'Role',
   'RoleBinding',
   'Service',
@@ -87,6 +88,21 @@ function createNamespaces (k8s, cluster) {
     return k8s.createNamespace(namespace)
   })
   return Promise.all(promises)
+}
+
+function createNetworkPolicy (k8s, resources) {
+  let policyPromise
+  if (resources.networkPolicy) {
+    log.info(`  creating network policy '${resources.networkPolicy.metadata.namespace}.${resources.networkPolicy.metadata.name}'`)
+    policyPromise = k8s.createNetworkPolicy(resources.networkPolicy)
+      .then(
+        null,
+        onNetworkPolicyCreationFailed.bind(null, resources.networkPolicy)
+      )
+  } else {
+    policyPromise = Promise.resolve()
+  }
+  return policyPromise
 }
 
 function createRole (k8s, resources) {
@@ -196,6 +212,21 @@ function deleteNamespaces (k8s, cluster) {
     return k8s.deleteNamespace(namespace)
   })
   return Promise.all(promises)
+}
+
+function deleteNetworkPolicy (k8s, resources) {
+  let policyPromise
+  if (resources.networkPolicy) {
+    log.info(`  deleting network policy '${resources.networkPolicy.metadata.namespace}.${resources.networkPolicy.metadata.name}'`)
+    policyPromise = k8s.deleteNetworkPolicy(resources.networkPolicy)
+      .then(
+        null,
+        onNetworkPolicyDeletionFailed.bind(null, resources.networkPolicy)
+      )
+  } else {
+    policyPromise = Promise.resolve()
+  }
+  return policyPromise
 }
 
 function deleteRole (k8s, resources) {
@@ -501,6 +532,9 @@ function onConfigurationDeletionFailed (cluster, err) {
 
 function onContainerCreated (k8s, resources) {
   return createContainerServices(k8s, resources)
+    .then(
+      onContainerServiceCreated.bind(null, k8s, resources)
+    )
 }
 
 function onContainerCreationFailed (spec, err) {
@@ -515,6 +549,10 @@ function onContainerDeleted (k8s, resources) {
 function onContainerDeletionFailed (spec, err) {
   log.error(`Failed to delete container '${spec.metadata.namespace}.${spec.metadata.name}' with error:\n\t${err.message}`)
   throw err
+}
+
+function onContainerServiceCreated (k8s, resources) {
+  return createNetworkPolicy(k8s, resources)
 }
 
 function onDeletionFailed (err) {
@@ -549,6 +587,16 @@ function onNamespaceCreationFailed (cluster, err) {
 
 function onNamespaceDeletionFailed (cluster, err) {
   log.error(`Failed to delete namespaces '${cluster.namespaces.join(', ')}' with error:\n\t${err.message}`)
+  throw err
+}
+
+function onNetworkPolicyCreationFailed (policy, err) {
+  log.error(`Failed to create network policy '${policy.metadata.namespace}.${policy.metadata.name}' with error:\n\t${err.message}`)
+  throw err
+}
+
+function onNetworkPolicyDeletionFailed (policy, err) {
+  log.error(`Failed to delete network policy '${policy.metadata.namespace}.${policy.metadata.name}' with error:\n\t${err.message}`)
   throw err
 }
 
@@ -682,6 +730,7 @@ module.exports = function (k8s) {
     createContainerServices: createContainerServices.bind(null, k8s),
     createLevels: createLevels.bind(null, k8s),
     createNamespaces: createNamespaces.bind(null, k8s),
+    createNetworkPolicy: createNetworkPolicy.bind(null, k8s),
     createRoleBinding: createRoleBinding.bind(null, k8s),
     createServicesInLevel: createServicesInLevel.bind(null, k8s),
     createServiceResources: createServiceResources.bind(null, k8s),
@@ -691,6 +740,7 @@ module.exports = function (k8s) {
     deleteContainerServices: deleteContainerServices.bind(null, k8s),
     deleteLevels: deleteLevels.bind(null, k8s),
     deleteNamespaces: deleteNamespaces.bind(null, k8s),
+    deleteNetworkPolicy: deleteNetworkPolicy.bind(null, k8s),
     deleteRoleBinding: deleteRoleBinding.bind(null, k8s),
     deleteServicesInLevel: deleteServicesInLevel.bind(null, k8s),
     deleteServiceResources: deleteServiceResources.bind(null, k8s),

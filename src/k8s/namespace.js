@@ -36,7 +36,10 @@ function createNamespace (client, namespace) {
     apiVersion: 'v1',
     kind: 'Namespace',
     metadata: {
-      name: namespace
+      name: namespace,
+      labels: {
+        name: namespace
+      }
     }
   }
   return getNamespace(client, namespace)

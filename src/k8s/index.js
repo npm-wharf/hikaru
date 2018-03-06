@@ -38,6 +38,7 @@ module.exports = function (client) {
   const job = require('./job')(client, deletes)
   const manifest = require('./manifest')(client)
   const namespace = require('./namespace')(client)
+  const networkPolicy = require('./networkPolicy')(client, deletes)
   const role = require('./role')(client)
   const roleBinding = require('./roleBinding')(client)
   const service = require('./service')(client, deletes)
@@ -47,6 +48,7 @@ module.exports = function (client) {
   deletes.daemonSet = daemonSet.delete
   deletes.deployment = deployment.delete
   deletes.job = job.delete
+  deletes.networkPolicy = networkPolicy.delete
   deletes.role = role.delete
   deletes.roleBinding = roleBinding.delete
   deletes.service = service.delete
@@ -100,6 +102,13 @@ module.exports = function (client) {
     createNamespace: namespace.create,
     deleteNamespace: namespace.delete,
     listNamespaces: namespace.list,
+
+    createNetworkPolicy: networkPolicy.create,
+    deleteNetworkPolicy: networkPolicy.delete,
+    getNetworkPolicysByNamespace: networkPolicy.getByNamespace,
+    listNetworkPolicys: networkPolicy.list,
+    patchNetworkPolicy: networkPolicy.patch,
+    updateNetworkPolicy: networkPolicy.update,
 
     createRole: role.create,
     deleteRole: role.delete,
