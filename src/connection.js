@@ -20,6 +20,7 @@ function getClient (config) {
         }
       })
     } else {
+      console.log('turning off TLS verification')
       process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
       connection.insecureSkipTlsVerify = true
     }
@@ -35,12 +36,19 @@ function getClient (config) {
         }
       })
     } else {
+      console.log('turning off TLS verification')
       process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
       connection.insecureSkipTlsVerify = true
     }
     creds = 'bearer token'
   } else {
-    connection.ca = config.ca
+    if (config.ca) {
+      connection.ca = config.ca
+    } else {
+      console.log('turning off TLS verification')
+      process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
+      connection.insecureSkipTlsVerify = true
+    }
     connection.cert = config.cert
     connection.key = config.key
     creds = 'cluster certificates'
@@ -70,9 +78,6 @@ function validate (config) {
       throw new Error('Cannot authenticate to Kubernetes cluster via basic auth without a valid password')
     }
   } else if (!config.token) {
-    if (!config.ca) {
-      throw new Error('Cannot authenticate to Kubernetes cluster via certificates without a valid CA')
-    }
     if (!config.cert) {
       throw new Error('Cannot authenticate to Kubernetes cluster via certificates without a valid client cert')
     }
