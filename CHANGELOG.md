@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.9.0"></a>
+# [1.9.0](https://github.com/npm-wharf/hikaru/compare/v1.8.1...v1.9.0) (2018-03-30)
+
+
+### Bug Fixes
+
+* connection should permit cert based auth without a CA to support local dev ([827dd5e](https://github.com/npm-wharf/hikaru/commit/827dd5e))
+
+
+### Features
+
+* add token and key based auth to secure api ([d838e46](https://github.com/npm-wharf/hikaru/commit/d838e46))
+
+
+
 <a name="1.8.1"></a>
 ## [1.8.1](https://github.com/npm-wharf/hikaru/compare/v1.8.0...v1.8.1) (2018-03-07)
 
