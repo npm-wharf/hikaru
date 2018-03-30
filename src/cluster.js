@@ -297,6 +297,7 @@ function filterContainerManifests (manifest) {
 }
 
 function findResourcesByImage (k8s, image) {
+  console.log('testing with image', image)
   let testResource = (list, resource) => {
     if (resource.image.indexOf(image) >= 0) {
       list.push(resource)
@@ -319,6 +320,7 @@ function findResourcesByImage (k8s, image) {
 }
 
 function findResourcesByMetadata (k8s, metadata) {
+  console.log('testing with metadata', metadata)
   let testResource = (list, resource) => {
     if (match(resource.metadata, metadata, resource.labels)) {
       list.push(resource)
@@ -403,7 +405,7 @@ function getImageMetadata (k8s, options) {
                 return acc
               },
               err => {
-                log.error(`Failed to get image metadata for namespace '${namespace}:\n\t${err.message}'`)
+                log.error(`Failed to get image metadata for namespace '${namespace}':\n\t${err.stack}'`)
               }
             )
         }, {})
@@ -425,7 +427,8 @@ function getImageMetadataForNamespace (k8s, namespace, options = {}) {
     getDaemons(),
     getStateful(),
     (deployments, daemons, sets) => {
-      return Object.assign({}, deployments, daemons, sets)
+      const merged = Object.assign({}, deployments, daemons, sets)
+      return merged
     }
   )
 }
@@ -464,9 +467,9 @@ function match (target, props, options = {}) {
   let keys = options.filter
     ? options.filter.split(',').map(x => x.trim())
     : MATCH_KEYS
-  keys = keys.concat(_.without(Object.keys(options), 'filter'))
   return keys.reduce((matches, key) => {
     if (props[key] !== target[key]) {
+      console.log(`${key}: ${props[key]} != ${target[key]}`)
       matches = false
     }
     if (options[key] && options[key] !== target[key]) {

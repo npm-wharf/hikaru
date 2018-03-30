@@ -1,6 +1,6 @@
-require('./setup')
+require('../setup')
 
-const parser = require('../src/imageParser')
+const parser = require('../../src/imageParser')
 
 describe('Image Parser', function () {
   let OLD_LOG

@@ -1,6 +1,6 @@
-require('./setup')
+require('../setup')
 
-const compare = require('../src/imageComparer').compare
+const compare = require('../../src/imageComparer').compare
 
 describe('Image Comparer', function () {
   let OLD_LOG

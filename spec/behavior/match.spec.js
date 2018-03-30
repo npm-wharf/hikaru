@@ -1,6 +1,6 @@
-require('./setup')
+require('../setup')
 
-const match = require('../src/cluster')().match
+const match = require('../../src/cluster')().match
 
 describe('Metadata Matching', function () {
   it('should match when options are empty', function () {
@@ -76,9 +76,11 @@ describe('Metadata Matching', function () {
       branch: 'fivel'
     }
     const options4 = {
+      filter: 'version',
       version: 'sixes'
     }
     const options5 = {
+      filter: 'commit',
       commit: 'seven-eleven'
     }
     match(resource, image, options1).should.eql(false)
@@ -117,9 +119,11 @@ describe('Metadata Matching', function () {
       branch: 'fivel'
     }
     const options4 = {
+      filter: 'version',
       version: 'sixes'
     }
     const options5 = {
+      filter: 'commit',
       commit: 'seven-eleven'
     }
     match(resource, image, options1).should.eql(false)

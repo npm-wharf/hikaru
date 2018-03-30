@@ -6,16 +6,20 @@ function getImage (data) {
 }
 
 function getOptions (data) {
-  if (data.filter) {
+  if (data && data.filter) {
     return { filter: data.filter.split(',') }
   } else {
-    return null
+    return undefined
   }
 }
 
 module.exports = function (hikaru, config) {
   return {
     name: 'image',
+    middleware: [
+      'auth.bearer',
+      'auth.cert'
+    ],
     actions: {
       candidates: {
         method: 'GET',
@@ -36,7 +40,7 @@ module.exports = function (hikaru, config) {
                   status: 500,
                   data: {
                     error: `Failed to retrieve upgrade candidates using the image '${image}' from the cluster '${config.url}'`,
-                    reason: err.message
+                    reason: err.stack
                   }
                 }
               })

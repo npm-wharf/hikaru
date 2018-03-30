@@ -8,6 +8,10 @@ function getImage (data) {
 module.exports = function (hikaru, config) {
   return {
     name: 'resource',
+    middleware: [
+      'auth.bearer',
+      'auth.cert'
+    ],
     actions: {
       search: {
         method: 'GET',

@@ -151,9 +151,9 @@ function getStatefulSetsByNamespace (client, namespace, baseImage) {
                 image: container.image,
                 container: container.name,
                 metadata: metadata,
-                labels: spec.template.metadata
-                  ? spec.template.metadata.labels
-                  : {}
+                labels: spec.spec.template.metadata
+                  ? spec.spec.template.metadata.labels
+                  : metadata.labels || {}
               })
             })
             return acc

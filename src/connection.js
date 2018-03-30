@@ -27,7 +27,7 @@ function getClient (config) {
     creds = 'username and password'
   } else if (config.token) {
     connection.auth = {
-      bearer: config.token
+      bearer: `bearer ${config.token}`
     }
     if (config.ca) {
       Object.assign(connection, {

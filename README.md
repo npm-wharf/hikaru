@@ -5,7 +5,7 @@ A deployment and continuous delivery tool for kubernetes. 100 internets if you g
 [![Build Status][travis-image]][travis-url]
 [![Coverage Status][coveralls-image]][coveralls-url]
 
-# What It Does - Automating Continuous Delivery
+# What It Does - Deployments and Continuous Delivery
 
 hikaru was built specifically to make it easy to deploy and maintain kubernetes clusters.
 
@@ -385,6 +385,13 @@ When running as a service, all configuration is driven by environment variables:
  * `K8S-KEY`
  * `K8S-USERNAME`
  * `K8S-PASSWORD`
+ * `API_TOKEN` - a token to use with keys
+ * `LOCAL_PRIVATE_KEY` - path to secret private key
+ * `REMOTE_PUBLIC_KEY` - path to shared public key
+
+The `API_TOKEN` allows you to set a bearer token to secure the API endpoints. This presents only a moderate level of security.
+
+The purpose of the `LOCAL_PRIVATE_KEY` and `REMOTE_PUBLIC_KEY` is to allow multiple hikaru deployments to communicate with a single upstream securely without having to rely solely on a single shared token. It creates a situation where an attacker would need to compromise both the hikaru and calling systems in order to get both sets of keys and the token.
 
 # CLI
 

@@ -1,4 +1,4 @@
-require('./setup')
+require('../setup')
 const fs = require('fs')
 const path = require('path')
 const CACHE_FILE = path.resolve('./spec/.cache')
@@ -6,7 +6,7 @@ describe('Alias Cache', function () {
   let cache
   before(function () {
     fs.writeFileSync(CACHE_FILE, '{ "aliases": {} }', {encoding: 'utf8', mode: 0o600})
-    cache = require('../src/aliasCache')(CACHE_FILE)
+    cache = require('../../src/aliasCache')(CACHE_FILE)
   })
 
   describe('when adding an alias with user name and password', function () {

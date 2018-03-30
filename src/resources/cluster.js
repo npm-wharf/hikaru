@@ -171,6 +171,10 @@ function removeFromTar (config, hikaru, env) {
 module.exports = function (hikaru, config) {
   return {
     name: 'cluster',
+    middleware: [
+      'auth.bearer',
+      'auth.cert'
+    ],
     actions: {
       deploy: {
         method: 'POST',
