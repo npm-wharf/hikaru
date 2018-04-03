@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.9.1"></a>
+## [1.9.1](https://github.com/npm-wharf/hikaru/compare/v1.9.0...v1.9.1) (2018-04-03)
+
+
+### Bug Fixes
+
+* add name labels to prexisting namespaces to allow for reliable network policy targeting ([dc3301a](https://github.com/npm-wharf/hikaru/commit/dc3301a))
+
+
+
 <a name="1.9.0"></a>
 # [1.9.0](https://github.com/npm-wharf/hikaru/compare/v1.8.1...v1.9.0) (2018-03-30)
 
