@@ -102,6 +102,7 @@ module.exports = function (client) {
     createNamespace: namespace.create,
     deleteNamespace: namespace.delete,
     listNamespaces: namespace.list,
+    fixNamespaceLabels: namespace.fixLabels,
 
     createNetworkPolicy: networkPolicy.create,
     deleteNetworkPolicy: networkPolicy.delete,

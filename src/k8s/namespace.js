@@ -87,10 +87,43 @@ function listNamespaces (client) {
     )
 }
 
+function fixNamespaceLabels (client) {
+  const getUpdate = (namespace) => {
+    return {
+      apiVersion: 'v1',
+      kind: 'Namespace',
+      metadata: {
+        name: namespace,
+        labels: {
+          name: namespace
+        }
+      }
+    }
+  }
+  log.info('Checking existing namespaces for missing name labels')
+  return client
+    .namespaces
+    .list()
+    .then(
+      list => Promise.all(
+        list.items.map(item => {
+          let name = item.metadata.name
+          if (!item.metadata.labels || !item.metadata.labels.name || item.metadata.labels.name !== name) {
+            log.info(`Adding name label to namespace ${name}`)
+            return client.namespace(name).patch(getUpdate(name))
+          } else {
+            return Promise.resolve()
+          }
+        })
+      )
+    )
+}
+
 module.exports = function (client) {
   return {
     create: createNamespace.bind(null, client),
     delete: deleteNamespace.bind(null, client),
+    fixLabels: fixNamespaceLabels.bind(null, client),
     get: getNamespace.bind(null, client),
     list: listNamespaces.bind(null, client)
   }

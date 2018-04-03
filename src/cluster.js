@@ -87,6 +87,7 @@ function createNamespaces (k8s, cluster) {
     log.info(`creating namespace: '${namespace}'`)
     return k8s.createNamespace(namespace)
   })
+  promises.push(k8s.fixNamespaceLabels())
   return Promise.all(promises)
 }
 
