@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.9.3"></a>
+## [1.9.3](https://github.com/npm-wharf/hikaru/compare/v1.9.2...v1.9.3) (2018-04-18)
+
+
+### Bug Fixes
+
+* correct errors with metadata parsing during upgrade command ([6dafed8](https://github.com/npm-wharf/hikaru/commit/6dafed8))
+
+
+
 <a name="1.9.2"></a>
 ## [1.9.2](https://github.com/npm-wharf/hikaru/compare/v1.9.1...v1.9.2) (2018-04-18)
 
