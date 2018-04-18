@@ -59,7 +59,7 @@ module.exports = function (hikaru, config) {
                 return { data: result }
               },
               err => {
-                log.error(`Failed to upgrade workloads using the image '${image}' from the cluster '${config.url}':\n\t${err.message}`)
+                log.error(`Failed to upgrade workloads using the image '${image}' from the cluster '${config.url}':\n\t${err.stack}`)
                 return {
                   status: 500,
                   data: {

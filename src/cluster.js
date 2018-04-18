@@ -695,7 +695,7 @@ function upgradeResources (k8s, image, options) {
   return getUpgradeCandidates(k8s, image, options)
     .then(
       set => {
-        const upgrades = set.upgrades.map(upgradeResource.bind(null, k8s))
+        const upgrades = set.upgrade.map(upgradeResource.bind(null, k8s))
         return Promise
           .all(upgrades)
           .then(
@@ -710,14 +710,14 @@ function upgradeResources (k8s, image, options) {
 
 function upgradeResource (k8s, metadata) {
   const namespace = metadata.namespace
-  const name = metadata.name
+  const name = metadata.service
   const container = metadata.container
-  const image = metadata.image
-  if (metadata.type === 'DaemonSet') {
+  const image = metadata.comparedTo
+  if (/daemonset/i.test(metadata.type)) {
     return k8s.updateDaemonSet(namespace, name, image, container)
-  } else if (metadata.type === 'Deployment') {
+  } else if (/deployment/i.test(metadata.type)) {
     return k8s.upgradeDeployment(namespace, name, image, container)
-  } else if (metadata.type === 'StatefulSet') {
+  } else if (/statefulset/i.test(metadata.type)) {
     return k8s.upgradeStatefulSet(namespace, name, image, container)
   }
 }

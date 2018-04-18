@@ -103,6 +103,9 @@ function complexDiff (a, b, k) {
 
 function getImagePatch (name, image) {
   return {
+    metadata: {
+      name: name
+    },
     spec: {
       template: {
         spec: {
