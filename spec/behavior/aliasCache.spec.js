@@ -21,7 +21,6 @@ describe('Alias Cache', function () {
     it('should remove user name and password and store base64 encoded credentials instead', function () {
       const json = fs.readFileSync(CACHE_FILE, 'utf8')
       const obj = JSON.parse(json)
-      console.log(obj)
       Object.keys(obj['aliases']['one']).should.eql([
         'url',
         'credentials'
@@ -41,7 +40,6 @@ describe('Alias Cache', function () {
     it('should store options as expected', function () {
       const json = fs.readFileSync(CACHE_FILE, 'utf8')
       const obj = JSON.parse(json)
-      console.log(obj)
       Object.keys(obj['aliases']['two']).should.eql([
         'url',
         'user',

@@ -55,15 +55,15 @@ module.exports = function (hikaru, config) {
           return hikaru.upgradeImage(image)
             .then(
               result => {
-                log.info(`upgraded resources with ${image}:\n\t${JSON.stringify(result, null, 2)}`)
+                log.info(`upgraded workloads with ${image}:\n\t${JSON.stringify(result, null, 2)}`)
                 return { data: result }
               },
               err => {
-                log.error(`Failed to upgrade resources using the image '${image}' from the cluster '${config.url}':\n\t${err.message}`)
+                log.error(`Failed to upgrade workloads using the image '${image}' from the cluster '${config.url}':\n\t${err.message}`)
                 return {
                   status: 500,
                   data: {
-                    error: `Failed to upgrade resources using the image '${image}' from the cluster '${config.url}'`,
+                    error: `Failed to upgrade workloads using the image '${image}' from the cluster '${config.url}'`,
                     reason: err.message
                   }
                 }

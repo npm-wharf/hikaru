@@ -463,7 +463,6 @@ describe('Spec Differences', function () {
         }
       }
       const diff = complex(a, b)
-      // console.log(JSON.stringify(diff,null,2))
       diff.should.eql({
         a: {
           b: {

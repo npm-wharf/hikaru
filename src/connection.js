@@ -14,13 +14,14 @@ function getClient (config) {
       password: config.password
     }
     if (config.ca) {
+      log.debug(`authenticating with username '${config.username}' and password using included CA`)
       Object.assign(connection, {
         agentOptions: {
           ca: config.ca
         }
       })
     } else {
-      console.log('turning off TLS verification')
+      log.debug(`authenticating with username '${config.username}' and password without TLS verification`)
       process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
       connection.insecureSkipTlsVerify = true
     }
@@ -30,22 +31,24 @@ function getClient (config) {
       bearer: `bearer ${config.token}`
     }
     if (config.ca) {
+      log.debug(`authenticating with token '${config.token}' and included CA`)
       Object.assign(connection, {
         agentOptions: {
           ca: config.ca
         }
       })
     } else {
-      console.log('turning off TLS verification')
+      log.debug(`authenticating with token '${config.token}' without TLS verification`)
       process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
       connection.insecureSkipTlsVerify = true
     }
     creds = 'bearer token'
   } else {
     if (config.ca) {
+      log.debug(`authenticating with asymmetric key exchange and included CA`)
       connection.ca = config.ca
     } else {
-      console.log('turning off TLS verification')
+      log.debug(`authenticating with asymmetric key exchange without TLS verification`)
       process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
       connection.insecureSkipTlsVerify = true
     }

@@ -36,7 +36,7 @@ hikaru also does not accept docker credentials nor will it store and fetch them.
 
 # Complimentary Tooling
 
-hikaru requires [mcgonagall](https://github.com/npm-wharf/mcgonagall) style cluster specifications. You'll get the most mileage out of it by adopting [shipwright](https://github.com/npm-wharf/shipwright) to build your Docker images or at least using a compatible tagging approach (see: [buildgoggles](https://www.npmjs.com/package/buildgoggles)). These complimentary aspects come largely from how hikaru infers metadata about Kubernetes resources based on the Docker image name and tag.
+hikaru requires [mcgonagall](https://github.com/npm-wharf/mcgonagall) style cluster specifications. You'll get the most mileage out of it by adopting [shipwright](https://github.com/npm-wharf/shipwright) to build your Docker images or at least using a compatible tagging approach (see: [buildgoggles](https://www.npmjs.com/package/buildgoggles)). These complimentary aspects come largely from how hikaru infers metadata about Kubernetes workloads based on the Docker image name and tag.
 
 # Modes
 
@@ -270,7 +270,7 @@ The POST body will have to be multi-part to include both the tarball and a set o
 
 The delete actions requires the same specification used to create it (including any tokens). That's because hikaru reverses the deploy steps rather than just aggressively deleting everything from the cluster.
 
-This also prevents you from deleting resources that weren't deployed as part of your spec.
+This also prevents you from deleting workloads that weren't deployed as part of your spec.
 
 **Remove From Git**
 `DELETE /api/cluster/{gitHost}/{repoOwner}/{repoName}`
@@ -288,11 +288,11 @@ The DELETE body will have to be multi-part to include both the tarball and a set
 
 ### Get Upgrade Candidates
 
-Returns a hash containing lists of resources. 
- * `upgrade` has the list of resources eligible for upgrade. 
- * `obsolete` is the list of compatible resources that have a newer version than the posted image
- * `equal` is the list of compatible resources that already have the image
- * `error` is the list of resources that were ignored which includes a `diff` property with a brief explanation of why they were ignored 
+Returns a hash containing lists of workloads. 
+ * `upgrade` has the list of workloads eligible for upgrade. 
+ * `obsolete` is the list of compatible workloads that have a newer version than the posted image
+ * `equal` is the list of compatible workloads that already have the image
+ * `error` is the list of workloads that were ignored which includes a `diff` property with a brief explanation of why they were ignored 
 
 `GET /api/image/{image}?filter=`
 `GET /api/image/{repo}/{image}?filter=`
@@ -322,13 +322,13 @@ You could make the last form more permissive by telling it to only consider the 
 
 So that it would upgrade any resource using any `etcd` image regardless of whether or not it was the coreos Docker image or not.
 
-### Upgrade Resources With Image
+### Upgrade Workloads With Image
 
-Returns a hash containing lists of resources. 
- * `upgrade` has the list of resources upgraded. 
- * `obsolete` is the list of compatible resources that have a newer version than the posted image
- * `equal` is the list of compatible resources that already have the image
- * `error` is the list of resources that were ignored which includes a `diff` property with a brief explanation of why they were ignored 
+Returns a hash containing lists of workloads. 
+ * `upgrade` has the list of workloads upgraded. 
+ * `obsolete` is the list of compatible workloads that have a newer version than the posted image
+ * `equal` is the list of compatible workloads that already have the image
+ * `error` is the list of workloads that were ignored which includes a `diff` property with a brief explanation of why they were ignored 
 
 `POST /api/image/{image}?filter=`
 `POST /api/image/{repo}/{image}?filter=`
@@ -358,7 +358,7 @@ You could make the last form more permissive by telling it to only consider the 
 
 So that it would upgrade any resource using any `etcd` image regardless of whether or not it was the coreos Docker image or not.
 
-### Find Resources By Image
+### Find Workloads By Image
 
 Returns metadata for any resource that has an image matching the text supplied.
 
@@ -413,7 +413,7 @@ If tokens are present in a specification and not provided via a `tokenFile`, hik
 
 ## Deploying Clusters
 
-When deploying a spec that has already been deployed, hikaru will attempt to diff all manifests included and ignore identical resources while performing a rolling update (where available) on changed manifests.
+When deploying a spec that has already been deployed, hikaru will attempt to diff all manifests included and ignore identical workloads while performing a rolling update (where available) on changed manifests.
 
 ### `saveDiffs`
 
@@ -507,7 +507,7 @@ hikaru candidates {image} \
   --verbose
 ```
 
-## Finding Resources By Image
+## Finding Workloads By Image
 
 ```shell
 hikaru findByImage {image} \
@@ -628,7 +628,7 @@ hikaru.upgradeImage(
   })
   .then(
     list => {
-      // list of upgraded resources
+      // list of upgraded workloads
     },
     err => {}
   )
@@ -636,9 +636,9 @@ hikaru.upgradeImage(
 
 ## Getting Upgrade Candidates
 
-Works like the upgrade command but instead of performing the upgrade, only returns the list of resources that would be upgraded.
+Works like the upgrade command but instead of performing the upgrade, only returns the list of workloads that would be upgraded.
 
-Very useful for checking to see which resources would be affected before running a command.
+Very useful for checking to see which workloads would be affected before running a command.
 
 It is recommended to use this to check with users before running the actual upgrade - especially if they've been allowed to change any filter settings.
 
@@ -652,25 +652,25 @@ hikaru.getCandidatesImage(
   })
   .then(
     list => {
-      // list of upgraded resources
+      // list of upgraded workloads
     },
     err => {}
   )
 ```
 
-## Finding Resources By Image
+## Finding Workloads By Image
 
-Performs a search in the cluster for resources with an image containing the provided string.
+Performs a search in the cluster for workloads with an image containing the provided string.
 
 Useful for trying to see which things might be in use across various owners. Example: searching for `nginx` to see how many different NGiNX containers might be deployed.
 
 ```js
 const hikaru = require('hikaru')
 
-hikaru.findResources('nginx')
+hikaru.findWorkloads('nginx')
   .then(
     list => {
-      // list of matching resources
+      // list of matching workloads
     },
     err => {}
   )

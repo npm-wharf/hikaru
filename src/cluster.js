@@ -298,7 +298,6 @@ function filterContainerManifests (manifest) {
 }
 
 function findResourcesByImage (k8s, image) {
-  console.log('testing with image', image)
   let testResource = (list, resource) => {
     if (resource.image.indexOf(image) >= 0) {
       list.push(resource)
@@ -321,7 +320,6 @@ function findResourcesByImage (k8s, image) {
 }
 
 function findResourcesByMetadata (k8s, metadata) {
-  console.log('testing with metadata', metadata)
   let testResource = (list, resource) => {
     if (match(resource.metadata, metadata, resource.labels)) {
       list.push(resource)
@@ -470,7 +468,6 @@ function match (target, props, options = {}) {
     : MATCH_KEYS
   return keys.reduce((matches, key) => {
     if (props[key] !== target[key]) {
-      console.log(`${key}: ${props[key]} != ${target[key]}`)
       matches = false
     }
     if (options[key] && options[key] !== target[key]) {
