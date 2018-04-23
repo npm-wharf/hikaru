@@ -1,5 +1,5 @@
 name = "hikaru"
-start = "node ./index.js"
+start = "node ./src/server"
 
 [environment]
   
