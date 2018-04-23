@@ -1,0 +1,16 @@
+name = "hikaru"
+start = "node ./index.js"
+
+[environment]
+  
+  K8S_URL = "{{k8s_api_url}}"
+  K8S_HOST = "{{k8s_hostname}}"
+  K8S_TOKEN = "{{k8s_api_token}}"
+  K8S_CA = "{{k8s_ca}}"
+  K8S_CERT = "{{k8s_cert}}"
+  K8S_KEY = "{{k8s_key}}"
+  K8S_USERNAME = "{{k8s_username}}"
+  K8S_PASSWORD = "{{k8s_password}}"
+  API_TOKEN = "{{hikaru_api_token}}"
+  LOCAL_PRIVATE_KEY = "{{local_private_key}}"
+  REMOTE_PUBLIC_KEY = "{{remote_public_key}}"

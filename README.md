@@ -36,7 +36,7 @@ hikaru also does not accept docker credentials nor will it store and fetch them.
 
 # Complimentary Tooling
 
-hikaru requires [mcgonagall](https://github.com/npm-wharf/mcgonagall) style cluster specifications. You'll get the most mileage out of it by adopting [shipwright](https://github.com/npm-wharf/shipwright) to build your Docker images or at least using a compatible tagging approach (see: [buildgoggles](https://www.npmjs.com/package/buildgoggles)). These complimentary aspects come largely from how hikaru infers metadata about Kubernetes workloads based on the Docker image name and tag.
+hikaru requires [mcgonagall](https://github.com/npm-wharf/mcgonagall) style cluster specifications. You'll get the most mileage out of it by adopting [shipwright](https://github.com/npm-wharf/shipwright) to build your Docker images or at least using a compatible tagging approach (see: [buildgoggles](https://www.npmjs.com/package/buildgoggles)). These complimentary aspects come largely from how hikaru infers metadata about Kubernetes workloads based on the Docker image name and tag. Finally, [command-hub](https://github.com/npm-wharf/command-hub) is a service and complimentary CLI designed to run uptsream of multiple kubernetes clusters with hikaru-as-a-service deployed to them in order to make continuous deployment easy to incorporate into any system you're presently using.
 
 # Modes
 
@@ -375,23 +375,43 @@ It's just there to make it easy to:
  * find out if any manifests are using a particular version
 
 ## Environment Variables
+
 When running as a service, all configuration is driven by environment variables:
 
- * `K8S-URL`
- * `K8S-HOST`
- * `K8S-TOKEN`
- * `K8S-CA`
- * `K8S-CERT`
- * `K8S-KEY`
- * `K8S-USERNAME`
- * `K8S-PASSWORD`
+ * `K8S_URL`
+ * `K8S_HOST`
+ * `K8S_TOKEN`
+ * `K8S_CA`
+ * `K8S_CERT`
+ * `K8S_KEY`
+ * `K8S_USERNAME`
+ * `K8S_PASSWORD`
  * `API_TOKEN` - a token to use with keys
  * `LOCAL_PRIVATE_KEY` - path to secret private key
  * `REMOTE_PUBLIC_KEY` - path to shared public key
+ * `ETCD` - you'll need to set this so kickerd can do its thing
 
 The `API_TOKEN` allows you to set a bearer token to secure the API endpoints. This presents only a moderate level of security.
 
 The purpose of the `LOCAL_PRIVATE_KEY` and `REMOTE_PUBLIC_KEY` is to allow multiple hikaru deployments to communicate with a single upstream securely without having to rely solely on a single shared token. It creates a situation where an attacker would need to compromise both the hikaru and calling systems in order to get both sets of keys and the token.
+
+> !IMPORTANT! See the [Docker Image](https://github.com/npm-wharf/kickerd#pre-baked-docker-image) section of kickerd's Docker image to see how it's configured out of the box.
+
+## ETCD Keys
+
+hikaru's Docker image uses [kickerd](https://github.com/npm-wharf/kickerd) to check etcd keys for overrides to the environment variables above and then establish a watch across the keys in case they change. In the event that a key's value changes (or is added/deleted), kickerd will pull the new value in, set the corresponindg environment value and restart the process inside the container.
+
+ * `k8s_api_url` - `K8S_URL`
+ * `k8s_hostname` - `K8S_HOST`
+ * `k8s_api_token` - `K8S_TOKEN`
+ * `k8s_ca` - `K8S_CA`
+ * `k8s_cert` - `K8S_CERT`
+ * `k8s_key` - `K8S_KEY`
+ * `k8s_username` - `K8S_USERNAME`
+ * `k8s_password` - `K8S_PASSWORD`
+ * `hikaru_api_token` - `API_TOKEN`
+ * `local_private_key` - `LOCAL_PRIVATE_KEY`
+ * `remote_public_key ` - `REMOTE_PUBLIC_KEY`
 
 # CLI
 
@@ -400,7 +420,7 @@ Full argument names are shown in the command examples. Shorthand arguments are a
 ## Installation
 
 ```shell
-npm i @arobson/hikaru -g
+npm i @npm-wharf/hikaru -g
 ```
 
 ## Authentication
@@ -697,7 +717,7 @@ A Docker image containing the hikaru HTTP service is already built for ease of u
 
 And also released with various version tagging schemes.
 
-To use it, you can set the various environment variables to control behavior. To use it inside a Kubernetes cluster, I recommend pulling in the token and CA token that Kubernetes places in the pods. See the Kubernetes spec (below) for reference.
+To use it, you can set the various environment variables to control behavior. To use it inside a Kubernetes cluster, I recommend pulling in the token and CA token that Kubernetes places in the pods. See the Kubernetes spec (below) for reference. It does require an `etcd` URL, even if you never set any of the optional keys and only use environment keys for configuration.
 
 # Kubernetes Spec
 

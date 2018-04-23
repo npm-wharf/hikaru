@@ -1,9 +1,7 @@
-FROM node:8-alpine
+FROM npmwharf/kickerd:latest
 MAINTAINER Alex Robson <asrobson@gmail.com>
 
 RUN mkdir /app
 WORKDIR /app
 COPY . .
 RUN npm i
-
-CMD [ "node", "./src/server" ]
