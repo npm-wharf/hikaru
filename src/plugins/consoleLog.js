@@ -35,17 +35,20 @@ const debugOut = {
 }
 
 function initialize (service) {
-  bole.output({
-    level: levels[service.config.logging.level],
-    stream: debugOut
-  })
+  if (!bole._hasOutput) {
+    bole._hasOutput = true
+    bole.output({
+      level: process.env.DEBUG ? 'debug' : levels[service.config.logging.level],
+      stream: debugOut
+    })``
 
-  service.log.addAdapter(
-    { level: numeric[service.config.logging.level] },
-    entry => {
-      bole(entry.namespace)[levels[entry.level]](`  ${entry.namespace} [${entry.type}]: ${entry.message}`)
-    }
-  )
+    service.log.addAdapter(
+      { level: numeric[service.config.logging.level] },
+      entry => {
+        bole(entry.namespace)[levels[entry.level]](`  ${entry.namespace} [${entry.type}]: ${entry.message}`)
+      }
+    )
+  }
 }
 
 module.exports = function consoleLog () {
