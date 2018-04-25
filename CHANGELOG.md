@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.9.5"></a>
+## [1.9.5](https://github.com/npm-wharf/hikaru/compare/v1.9.4...v1.9.5) (2018-04-25)
+
+
+### Bug Fixes
+
+* correct bad path in kicker.toml ([bce69fb](https://github.com/npm-wharf/hikaru/commit/bce69fb))
+* correct edge case causing duplicate log entries, add debug output on auth failures due to bad key exchange ([592cc7a](https://github.com/npm-wharf/hikaru/commit/592cc7a))
+* correct paths in Dockerfile ([33c27ff](https://github.com/npm-wharf/hikaru/commit/33c27ff))
+* correct the way the bearer token header was constructed ([913ffbc](https://github.com/npm-wharf/hikaru/commit/913ffbc))
+* remove console log statements (in place for troubleshooting) ([bdce57e](https://github.com/npm-wharf/hikaru/commit/bdce57e))
+
+
+
 <a name="1.9.4"></a>
 ## [1.9.4](https://github.com/npm-wharf/hikaru/compare/v1.9.3...v1.9.4) (2018-04-23)
 
