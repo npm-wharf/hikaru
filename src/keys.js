@@ -31,8 +31,6 @@ function readFile (log, filePath) {
     console.log(`could not load local cert '${fullPath}'`)
     log.error(`could not load local cert '${fullPath}'`)
     return null
-  } else {
-    console.log(fullPath, fs.readFileSync(fullPath, 'utf8'))
   }
   return fs.readFileSync(fullPath)
 }
