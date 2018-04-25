@@ -10,10 +10,6 @@ module.exports = function auth (config, log) {
     publicKey = keys.read(log, config.publicKey)
     secret = config.apiToken || uuid()
   }
-  console.log(`local key path: ${config.localKey}`)
-  console.log(`local key: ${localKey.toString('base64')}`)
-  console.log(`public key path: ${config.publicKey}`)
-  console.log(`public key: ${publicKey.toString('base64')}`)
 
   return [
     function bearer (env, next) {

@@ -12,10 +12,6 @@ function decrypt (publicKey, localKey, token, signature) {
     }
   } catch (e) {
     log.error(`failed to decrypt token with error: ${e.message}`)
-    log.debug(`public key: ${publicKey.toString('base64')}`)
-    log.debug(`local key: ${localKey.toString('base64')}`)
-    log.debug(`token: ${token.toString('base64')}`)
-    log.debug(`signature: ${signature.toString('base64')}`)
   }
   return null
 }
