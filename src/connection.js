@@ -16,9 +16,7 @@ function getClient (config) {
     if (config.ca) {
       log.debug(`authenticating with username '${config.username}' and password using included CA`)
       Object.assign(connection, {
-        agentOptions: {
-          ca: config.ca
-        }
+
       })
     } else {
       log.debug(`authenticating with username '${config.username}' and password without TLS verification`)
@@ -28,7 +26,7 @@ function getClient (config) {
     creds = 'username and password'
   } else if (config.token) {
     connection.auth = {
-      bearer: `bearer ${config.token}`
+      bearer: config.token
     }
     if (config.ca) {
       log.debug(`authenticating with token '${config.token}' and included CA`)
