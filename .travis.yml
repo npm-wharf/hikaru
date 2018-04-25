@@ -14,4 +14,4 @@ node_js:
 
 after_success:
   - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
-  - shipwright build image --repo=npmwharf --name=hikaru --cache-from-latest --tags=lm,lt,v,ma,miv
+  - shipwright build image --repo=npmwharf --name=hikaru --tags=lm,lt,v,ma,miv
