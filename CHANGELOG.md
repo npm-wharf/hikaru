@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.10.0"></a>
+# [1.10.0](https://github.com/npm-wharf/hikaru/compare/v1.9.5...v1.10.0) (2018-04-29)
+
+
+### Bug Fixes
+
+* removing last diagnostic console.log in keys module ([2e76e71](https://github.com/npm-wharf/hikaru/commit/2e76e71))
+
+
+### Features
+
+* add run command to support forced run of specific jobs ([2a09a55](https://github.com/npm-wharf/hikaru/commit/2a09a55))
+
+
+
 <a name="1.9.5"></a>
 ## [1.9.5](https://github.com/npm-wharf/hikaru/compare/v1.9.4...v1.9.5) (2018-04-25)
 
