@@ -91,6 +91,7 @@ module.exports = function (client) {
     createJob: job.create,
     deleteJob: job.delete,
     listJobs: job.list,
+    runJob: job.run,
     updateJob: job.update,
 
     createManifest: manifest.create,

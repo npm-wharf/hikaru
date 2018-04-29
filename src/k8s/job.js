@@ -156,6 +156,23 @@ function replaceJob (client, namespace, name, spec) {
   })
 }
 
+function runJob (client, deletes, namespace, name, spec) {
+  const steps = [
+    () => deleteJob(client, namespace, name),
+    () => createJob(client, deletes, spec)
+  ]
+  return Promise.mapSeries(steps, s => s())
+    .then(
+      () => {
+        log.info(`job '${name}' in namespace '${namespace}' completed successfully`)
+      },
+      err => {
+        log.error(`running job '${name}' in namespace '${namespace}' failed with: ${err.stack}`)
+        throw new Error(`running job '${name}' in namespace '${namespace}' failed`)
+      }
+    )
+}
+
 function updateJob (client, namespace, name, diff) {
   return new Promise((resolve, reject) => {
     single(client, namespace, name).patch(diff)
@@ -176,6 +193,7 @@ module.exports = function (client, deletes) {
     delete: deleteJob.bind(null, client),
     list: listJobs.bind(null, client),
     replace: replaceJob.bind(null, client),
+    run: runJob.bind(null, client, deletes),
     update: updateJob.bind(null, client)
   }
 }

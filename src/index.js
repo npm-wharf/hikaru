@@ -88,6 +88,18 @@ function removeCluster (path, options) {
   })
 }
 
+function runJob (path, options) {
+  return onCluster(cluster => {
+    return mcgonagall.transfigure(path, options)
+      .then(
+        spec => {
+          log.info('transfiguration complete')
+          return cluster.runJob(spec, options.namespace, options.job)
+        }
+      )
+  })
+}
+
 function upgradeImage (image, options) {
   return onCluster(cluster => {
     return cluster.upgradeResources(image, options)
@@ -103,6 +115,7 @@ const api = {
   findResources: findResources,
   getCandidates: getCandidates,
   removeCluster: removeCluster,
+  runJob: runJob,
   upgradeImage: upgradeImage
 }
 

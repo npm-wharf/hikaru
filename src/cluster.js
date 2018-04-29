@@ -29,7 +29,7 @@ function createAccount (k8s, resources) {
     log.info(`    creating account '${resources.account.metadata.name}'`)
     accountPromise = k8s.createAccount(resources.account)
       .then(
-        null,
+        onAccountCreated.bind(null, k8s, resources),
         onAccountCreationFailed.bind(null, resources.account)
       )
   } else {
@@ -147,7 +147,12 @@ function createServicesInLevel (k8s, level, cluster) {
 function createServiceResources (k8s, resources) {
   return createAccount(k8s, resources)
     .then(
-      onAccountCreated.bind(null, k8s, resources)
+      () => {
+        return createContainer(k8s, resources)
+          .then(
+            onContainerCreated.bind(null, k8s, resources)
+          )
+      }
     )
 }
 
@@ -608,9 +613,6 @@ function onResourcesFailed (err) {
 
 function onRoleCreated (k8s, resources) {
   return createRoleBinding(k8s, resources)
-    .then(
-      onRoleBindingCreated.bind(null, k8s, resources)
-    )
 }
 
 function onRoleDeleted (k8s, resources) {
@@ -628,13 +630,6 @@ function onRoleCreationFailed (role, err) {
 function onRoleDeletionFailed (role, err) {
   log.error(`Failed to delete role '${role.metadata.namespace || 'Cluster'}.${role.metadata.name}' with error:\n\t${err.message}`)
   throw err
-}
-
-function onRoleBindingCreated (k8s, resources) {
-  return createContainer(k8s, resources)
-    .then(
-      onContainerCreated.bind(null, k8s, resources)
-    )
 }
 
 function onRoleBindingDeleted (k8s, resources) {
@@ -689,6 +684,38 @@ function removeContainer (k8s, resources) {
     log.info(`    deleting job '${resources.job.metadata.name}'`)
     return k8s.deleteJob(resources.job.metadata.namespace, resources.job.metadata.name)
   }
+}
+
+function runJob (k8s, cluster, namespace, jobName) {
+  const fullName = `${jobName}.${namespace}`
+  const jobSpec = cluster.services[fullName]
+  if (!jobSpec) {
+    return Promise.reject(new Error(`no job '${jobName}' in namespace '${namespace}', please check the specification and spelling`))
+  }
+  log.info(`creating job prerequisites: '${namespace}'`)
+  const steps = [
+    () => k8s.createNamespace(namespace),
+    () => k8s.fixNamespaceLabels(),
+    () => createConfiguration(k8s, cluster),
+    () => createAccount(k8s, jobSpec),
+    () => createNetworkPolicy(k8s, jobSpec)
+  ]
+
+  return Promise.mapSeries(steps, s => s())
+    .then(
+      () => k8s.runJob(namespace, jobName, jobSpec.job)
+        .then(
+          null,
+          err => {
+            log.error(`failed to run job '${jobName}' in '${namespace}': ${err.stack}`)
+            throw err
+          }
+        ),
+      err => {
+        log.error(`failed to establish namespace '${namespace}' - cannot run job '${jobName}': ${err.stack}`)
+        throw new Error(`cannot run job '${jobName}' - could not establish '${namespace}: ${err.stack}'`)
+      }
+    )
 }
 
 function upgradeResources (k8s, image, options) {
@@ -757,6 +784,7 @@ module.exports = function (k8s) {
     match: match,
     removeCluster: removeCluster.bind(null, k8s),
     removeContainer: removeContainer.bind(null, k8s),
+    runJob: runJob.bind(null, k8s),
     upgradeResources: upgradeResources.bind(null, k8s),
     upgradeResource: upgradeResource.bind(null, k8s)
   }

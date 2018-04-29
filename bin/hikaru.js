@@ -38,6 +38,7 @@ require('yargs') // eslint-disable-line no-unused-expressions
   .command(require('../src/commands/alias')(config, hikaru, readFile, aliasCache, debugOut))
   .command(require('../src/commands/deploy')(config, hikaru, readFile, aliasCache, debugOut))
   .command(require('../src/commands/remove')(config, hikaru, readFile, aliasCache, debugOut))
+  .command(require('../src/commands/run')(config, hikaru, readFile, aliasCache, debugOut))
   .demandCommand(1, 'The command?')
   .help()
   .version()
