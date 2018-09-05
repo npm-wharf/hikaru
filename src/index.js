@@ -6,109 +6,76 @@ const _ = require('lodash')
 
 fount.register('cluster', require('./cluster'))
 fount.register('k8s', require('./k8s'))
-fount.register('client', (config) => {
-  return connection.getClient(config)
-    .then(
-      null,
-      err => {
-        log.error(err.message)
-        return null
-      }
-    )
+fount.register('client', async (config) => {
+  const client = await connection.getClient(config)
+    .catch(err => {
+      log.error(err.message)
+      return null
+    })
+  return client
 })
 fount.register('config', require('./config')())
 
-function aliasCluster (aliasCache, options) {
-  return onCluster(cluster => {
-    if (cluster) {
-      return cluster.getNamespaces()
-        .then(
-          () => {
-            aliasCache.addAlias(options.alias, options)
-          }
-        )
-    }
-  })
+async function aliasCluster (aliasCache, options) {
+  const cluster = await getCluster()
+  if (!cluster) return
+  await cluster.getNamespaces()
+  return aliasCache.addAlias(options.alias, options)
 }
 
-function deployCluster (path, options) {
-  return onCluster(cluster => {
-    return mcgonagall.transfigure(path, options)
-      .then(
-        spec => {
-          log.info('transfiguration complete')
-          return cluster.deployCluster(spec)
-        }
-      )
-  })
+async function deployCluster (path, options) {
+  const cluster = await getCluster()
+  const spec = await mcgonagall.transfigure(path, options)
+  log.info('transfiguration complete')
+  await cluster.deployCluster(spec)
 }
 
-function findResources (criteria) {
-  return onCluster(cluster => {
-    if (_.isString(criteria)) {
-      return cluster.findResourcesByImage(criteria)
-    } else {
-      return cluster.findResourcesByMetadata(criteria)
-    }
-  })
-}
-
-function onCluster (fn) {
-  if (api.cluster) {
-    return fn(api.cluster)
+async function findResources (criteria) {
+  const cluster = await getCluster()
+  if (_.isString(criteria)) {
+    return cluster.findResourcesByImage(criteria)
   } else {
-    return fount.resolve('cluster')
-      .then(
-        cluster => {
-          api.cluster = cluster
-          api.k8s = cluster.k8s
-          return fn(cluster)
-        },
-        err => {
-          throw new Error(err.message)
-        })
+    return cluster.findResourcesByMetadata(criteria)
   }
 }
 
-function getCandidates (image, options) {
-  return onCluster(cluster => {
-    return cluster.getUpgradeCandidates(image, options)
-  })
+async function getCluster () {
+  if (api.cluster) return api.cluster
+
+  const cluster = await fount.resolve('cluster')
+  api.cluster = cluster
+  api.k8s = cluster.k8s
+  return cluster
 }
 
-function removeCluster (path, options) {
-  return onCluster(cluster => {
-    return mcgonagall.transfigure(path, options)
-      .then(
-        spec => {
-          log.info('transfiguration complete')
-          return cluster.removeCluster(spec)
-        }
-      )
-  })
+async function getCandidates (image, options) {
+  const cluster = await getCluster()
+  return cluster.getUpgradeCandidates(image, options)
 }
 
-function runJob (path, options) {
-  return onCluster(cluster => {
-    return mcgonagall.transfigure(path, options)
-      .then(
-        spec => {
-          log.info('transfiguration complete')
-          return cluster.runJob(spec, options.namespace, options.job)
-        }
-      )
-  })
+async function removeCluster (path, options) {
+  const cluster = await getCluster()
+  const spec = await mcgonagall.transfigure(path, options)
+  log.info('transfiguration complete')
+  await cluster.removeCluster(spec)
 }
 
-function upgradeImage (image, options) {
-  return onCluster(cluster => {
-    return cluster.upgradeResources(image, options)
-  })
+async function runJob (path, options) {
+  const cluster = await getCluster()
+  const spec = await mcgonagall.transfigure(path, options)
+  log.info('transfiguration complete')
+  await cluster.runJob(spec, options.namespace, options.job)
+}
+
+async function upgradeImage (image, options) {
+  const cluster = await getCluster()
+  await cluster.upgradeResources(image, options)
 }
 
 const api = {
-  connect: () => {
-    return onCluster(() => {}).then(() => api)
+  connect: async () => {
+    await getCluster()
+    return api
   },
   aliasCluster: aliasCluster,
   deployCluster: deployCluster,

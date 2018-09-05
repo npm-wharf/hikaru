@@ -516,9 +516,10 @@ async function removeCluster (k8s, cluster) {
     .catch(exitOnError)
   log.info('configuration maps deleted')
 
-  return deleteLevels(k8s, cluster)
+  await deleteLevels(k8s, cluster)
     .catch(onDeletionFailed)
     .catch(exitOnError)
+
   log.info('cluster deletion complete')
 }
 
