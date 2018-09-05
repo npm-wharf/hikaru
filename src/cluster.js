@@ -26,10 +26,11 @@ async function createAccount (k8s, resources) {
   if (resources.account) {
     log.info(`    creating account '${resources.account.metadata.name}'`)
     await k8s.createAccount(resources.account)
-      .then(
-        onAccountCreated.bind(null, k8s, resources),
+      .catch(
         onAccountCreationFailed.bind(null, resources.account)
       )
+    await createRole(k8s, resources)
+    await createRoleBinding(k8s, resources)
   }
 }
 
@@ -120,9 +121,8 @@ async function createServicesInLevel (k8s, level, cluster) {
 async function createServiceResources (k8s, resources) {
   await createAccount(k8s, resources)
   await createContainer(k8s, resources)
-    .then(
-      onContainerCreated.bind(null, k8s, resources)
-    )
+  await createContainerServices(k8s, resources)
+  await createNetworkPolicy(k8s, resources)
 }
 
 async function deleteAccount (k8s, resources) {
@@ -226,7 +226,10 @@ async function deleteServicesInLevel (k8s, level, cluster) {
 
 async function deleteServiceResources (k8s, resources) {
   await deleteAccount(k8s, resources)
-  await onAccountDeleted(k8s, resources)
+  await deleteRoleBinding(k8s, resources)
+  await deleteRole(k8s, resources)
+  await deleteContainer(k8s, resources)
+  await deleteContainerServices(k8s, resources)
 }
 
 async function deployCluster (k8s, cluster) {
@@ -234,7 +237,18 @@ async function deployCluster (k8s, cluster) {
     .catch(
       onNamespaceCreationFailed.bind(null, cluster)
     )
-  await onNamespacesCreated(k8s, cluster)
+  log.info('namespaces created')
+
+  await createConfiguration(k8s, cluster)
+    .catch(onConfigurationCreationFailed.bind(null, cluster))
+    .catch(exitOnError)
+  log.info('configuration maps created')
+
+  await createLevels(k8s, cluster)
+    .catch(onResourcesFailed)
+    .catch(exitOnError)
+
+  log.info('cluster initialization complete')
 }
 
 function exitOnError () {
@@ -403,29 +417,9 @@ function onAccountCreationFailed (account, err) {
   throw err
 }
 
-async function onAccountCreated (k8s, resources) {
-  await createRole(k8s, resources)
-  await onRoleCreated(k8s, resources)
-}
-
 function onAccountDeletionFailed (account, err) {
   log.error(`Failed to create account '${account.metadata.namespace}.${account.metadata.name}' with error:\n\t${err.message}`)
   throw err
-}
-
-async function onAccountDeleted (k8s, resources) {
-  await deleteRoleBinding(k8s, resources)
-  await onRoleBindingDeleted(k8s, resources)
-}
-
-async function onConfigurationCreated (k8s, cluster) {
-  log.info('configuration maps created')
-  await createLevels(k8s, cluster)
-    .then(
-      () => log.info('cluster initialization complete'),
-      onResourcesFailed
-    )
-    .catch(exitOnError)
 }
 
 function onConfigurationCreationFailed (cluster, err) {
@@ -433,26 +427,9 @@ function onConfigurationCreationFailed (cluster, err) {
   throw err
 }
 
-function onConfigurationDeleted (k8s, cluster) {
-  log.info('configuration maps deleted')
-  return deleteLevels(k8s, cluster)
-    .then(
-      () => log.info('cluster deletion complete'),
-      onDeletionFailed
-    )
-    .catch(exitOnError)
-}
-
 function onConfigurationDeletionFailed (cluster, err) {
   log.error(`Failed to delete configuration maps with error:\n\t${err.message}`)
   throw err
-}
-
-function onContainerCreated (k8s, resources) {
-  return createContainerServices(k8s, resources)
-    .then(
-      onContainerServiceCreated.bind(null, k8s, resources)
-    )
 }
 
 function onContainerCreationFailed (spec, err) {
@@ -460,41 +437,14 @@ function onContainerCreationFailed (spec, err) {
   throw err
 }
 
-function onContainerDeleted (k8s, resources) {
-  return deleteContainerServices(k8s, resources)
-}
-
 function onContainerDeletionFailed (spec, err) {
   log.error(`Failed to delete container '${spec.metadata.namespace}.${spec.metadata.name}' with error:\n\t${err.message}`)
   throw err
 }
 
-function onContainerServiceCreated (k8s, resources) {
-  return createNetworkPolicy(k8s, resources)
-}
-
 function onDeletionFailed (err) {
   log.error(`Failed to erase cluster resources with error:\n\t${err.stack}`)
   throw err
-}
-
-async function onNamespacesCreated (k8s, cluster) {
-  log.info('namespaces created')
-  await createConfiguration(k8s, cluster)
-    .catch(onConfigurationCreationFailed.bind(null, cluster))
-    .catch(exitOnError)
-
-  await onConfigurationCreated(k8s, cluster)
-}
-
-async function onNamespacesDeleted (k8s, cluster) {
-  log.info('namespaces deleted')
-  await deleteConfiguration(k8s, cluster)
-    .catch(
-      onConfigurationDeletionFailed.bind(null, cluster)
-    )
-    .catch(exitOnError)
-  await onConfigurationDeleted(k8s, cluster)
 }
 
 function onNamespaceCreationFailed (cluster, err) {
@@ -522,15 +472,6 @@ function onResourcesFailed (err) {
   throw err
 }
 
-function onRoleCreated (k8s, resources) {
-  return createRoleBinding(k8s, resources)
-}
-
-async function onRoleDeleted (k8s, resources) {
-  await deleteContainer(k8s, resources)
-  await onContainerDeleted(k8s, resources)
-}
-
 function onRoleCreationFailed (role, err) {
   log.error(`Failed to create role '${role.metadata.namespace || 'Cluster'}.${role.metadata.name}' with error:\n\t${err.message}`)
   throw err
@@ -539,11 +480,6 @@ function onRoleCreationFailed (role, err) {
 function onRoleDeletionFailed (role, err) {
   log.error(`Failed to delete role '${role.metadata.namespace || 'Cluster'}.${role.metadata.name}' with error:\n\t${err.message}`)
   throw err
-}
-
-async function onRoleBindingDeleted (k8s, resources) {
-  await deleteRole(k8s, resources)
-  await onRoleDeleted(k8s, resources)
 }
 
 function onRoleBindingCreationFailed (binding, err) {
@@ -571,7 +507,19 @@ async function removeCluster (k8s, cluster) {
     .catch(
       onNamespaceDeletionFailed.bind(null, cluster)
     )
-  await onNamespacesDeleted(k8s, cluster)
+  log.info('namespaces deleted')
+
+  await deleteConfiguration(k8s, cluster)
+    .catch(
+      onConfigurationDeletionFailed.bind(null, cluster)
+    )
+    .catch(exitOnError)
+  log.info('configuration maps deleted')
+
+  return deleteLevels(k8s, cluster)
+    .catch(onDeletionFailed)
+    .catch(exitOnError)
+  log.info('cluster deletion complete')
 }
 
 async function removeContainer (k8s, resources) {
