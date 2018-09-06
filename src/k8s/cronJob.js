@@ -30,12 +30,13 @@ function multiple (client, namespace) {
 async function checkCronJob (client, namespace, name, outcome, wait = 500) {
   let tries = 0
   do {
+    await delay(wait)
     wait *= 1.5
     if (wait > 5000) {
       wait = 5000
     }
     tries++
-    await delay(wait)
+
     log.debug(`checking cron job status '${namespace}.${name}' for '${outcome}'`)
     try {
       var result = await single(client, namespace, name).get()
