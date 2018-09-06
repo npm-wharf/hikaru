@@ -11,7 +11,7 @@ function group (client) {
   return GROUPS[client.version]
 }
 
-function base (client, namespace) {
+async function base (client, namespace) {
   if (namespace) {
     return client
       .group(group(client))
@@ -22,7 +22,7 @@ function base (client, namespace) {
   }
 }
 
-function single (client, name, namespace) {
+async function single (client, name, namespace) {
   if (namespace) {
     return base(client, namespace)
       .rolebinding(name)
@@ -32,7 +32,7 @@ function single (client, name, namespace) {
   }
 }
 
-function multiple (client, namespace) {
+async function multiple (client, namespace) {
   if (namespace) {
     return base(client, namespace)
       .rolebindings
@@ -42,40 +42,31 @@ function multiple (client, namespace) {
   }
 }
 
-function createRoleBinding (client, roleBinding) {
+async function createRoleBinding (client, roleBinding) {
   const namespace = roleBinding.metadata.namespace || 'default'
   const name = roleBinding.metadata.name
   const appliedns = roleBinding.kind === 'ClusterRoleBinding'
     ? undefined : namespace
-  return single(client, name, appliedns).get()
-    .then(
-      () => Promise.resolve(),
-      () => {
-        return multiple(client, appliedns).create(roleBinding)
-          .then(
-            null,
-            err => {
-              throw new Error(`${roleBinding.kind} '${roleBinding.metadata.namespace}.${roleBinding.metadata.name}' failed to create:\n\t${err.message}`)
-            }
-          )
-      }
-    )
+  try {
+    await single(client, name, appliedns).get()
+  } catch (err) {
+    return multiple(client, appliedns).create(roleBinding)
+      .catch(err => {
+        throw new Error(`${roleBinding.kind} '${roleBinding.metadata.namespace}.${roleBinding.metadata.name}' failed to create:\n\t${err.message}`)
+      })
+  }
 }
 
-function deleteRoleBinding (client, namespace, name) {
-  return single(client, name, namespace).get()
-    .then(
-      (spec) => {
-        return single(client, name, namespace).delete()
-          .then(
-            null,
-            err => {
-              throw new Error(`${spec.kind} '${namespace}.${name}' could not be deleted:\n\t${err.message}`)
-            }
-          )
-      },
-      () => { return true }
-    )
+async function deleteRoleBinding (client, namespace, name) {
+  try {
+    var spec = await single(client, name, namespace).get()
+  } catch (err) {
+    return true
+  }
+  return single(client, name, namespace).delete()
+    .catch(err => {
+      throw new Error(`${spec.kind} '${namespace}.${name}' could not be deleted:\n\t${err.message}`)
+    })
 }
 
 function listRoleBindings (client, namespace) {
