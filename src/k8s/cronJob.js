@@ -1,8 +1,7 @@
 const _ = require('lodash')
 const log = require('bole')('k8s')
 const diffs = require('./specDiff')
-
-const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
+const retry = require('../retry')
 
 const GROUPS = {
   '1.7': 'batch/v2alpha1',
@@ -27,16 +26,8 @@ function multiple (client, namespace) {
   return base(client, namespace).cronjobs
 }
 
-async function checkCronJob (client, namespace, name, outcome, wait = 500) {
-  let tries = 0
-  do {
-    await delay(wait)
-    wait *= 1.5
-    if (wait > 5000) {
-      wait = 5000
-    }
-    tries++
-
+async function checkCronJob (client, namespace, name, outcome) {
+  retry(async bail => {
     log.debug(`checking cron job status '${namespace}.${name}' for '${outcome}'`)
     try {
       var result = await single(client, namespace, name).get()
@@ -45,8 +36,8 @@ async function checkCronJob (client, namespace, name, outcome, wait = 500) {
         log.debug(`cron job '${namespace}.${name}' deleted successfully.`)
         return result
       } else {
-        log.debug(`cron job '${namespace}.${name}' status check got API error. Checking again in ${wait} ms.`)
-        continue
+        log.debug(`cron job '${namespace}.${name}' status check got API error. Checking again in soon.`)
+        throw new Error('continue')
       }
     }
 
@@ -61,7 +52,7 @@ async function checkCronJob (client, namespace, name, outcome, wait = 500) {
         } else if (status.type === 'Complete' && status.status === 'True') {
           return result
         } else if (status.type === 'Failed' && status.status === 'True') {
-          throw new Error(`CronJob '${namespace}.${name}' failed to complete with status: '${JSON.stringify(result.status, null, 2)}'`)
+          bail(new Error(`CronJob '${namespace}.${name}' failed to complete with status: '${JSON.stringify(result.status, null, 2)}'`))
         }
       } else if (outcome === 'updated') {
         if (result.status === undefined || Object.keys(result.status).length === 0) {
@@ -70,13 +61,14 @@ async function checkCronJob (client, namespace, name, outcome, wait = 500) {
         } else if (status.type === 'Complete' && status.status === 'True') {
           return result
         } else if (status.type === 'Failed' && status.status === 'True') {
-          throw new Error(`CronJob '${namespace}.${name}' failed to update with status: '${JSON.stringify(result.status, null, 2)}'`)
+          bail(new Error(`CronJob '${namespace}.${name}' failed to update with status: '${JSON.stringify(result.status, null, 2)}'`))
         }
       }
     } catch (e) {
       log.error(`error checking result '${JSON.stringify(result, null, 2)}':\n\t${e}`)
     }
-  } while (tries < 20)
+    throw new Error('continue')
+  })
 }
 
 async function createCronJob (client, deletes, jobSpec) {

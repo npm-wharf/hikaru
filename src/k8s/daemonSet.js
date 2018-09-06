@@ -1,11 +1,10 @@
 const _ = require('lodash')
 const log = require('bole')('k8s')
-const Promise = require('bluebird')
 const core = require('./core')
 const diffs = require('./specDiff')
 const parse = require('../imageParser').parse
+const retry = require('../retry')
 
-const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 const GROUPS = {
   '1.4': 'extensions/v1beta1',
@@ -33,16 +32,8 @@ function multiple (client, namespace, name) {
   return base(client, namespace).daemonsets
 }
 
-async function checkDaemonSet (client, namespace, name, outcome, wait = 500) {
-  let tries = 0
-  do {
-    await delay(wait)
-    wait *= 1.5
-    if (wait > 5000) {
-      wait = 5000
-    }
-    tries++
-
+async function checkDaemonSet (client, namespace, name, outcome,) {
+  retry(async bail => {
     log.debug(`checking daemonSet status '${namespace}.${name}' for '${outcome}'`)
     try {
       var result = await single(client, namespace, name).get()
@@ -51,8 +42,8 @@ async function checkDaemonSet (client, namespace, name, outcome, wait = 500) {
         log.debug(`daemonSet '${namespace}.${name}' deleted successfully.`)
         return
       } else {
-        log.debug(`daemonSet '${namespace}.${name}' status check got API error. Checking again in ${wait} ms.`)
-        continue
+        log.debug(`daemonSet '${namespace}.${name}' status check got API error. Checking again soon.`)
+        bail(new Error('continue'))
       }
     }
 
@@ -61,10 +52,9 @@ async function checkDaemonSet (client, namespace, name, outcome, wait = 500) {
       return result
     } else if (outcome === 'deletion' && result.status.phase !== 'Terminating') {
       return result
-    } else {
-      continue
     }
-  } while (tries < 20)
+    bail(new Error('continue'))
+  })
 }
 
 async function createDaemonSet (client, deletes, daemonSet) {
