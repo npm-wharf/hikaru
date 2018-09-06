@@ -73,7 +73,7 @@ function build (config, aliasCache) {
   }
 }
 
-function handle (config, hikaru, readFile, aliasCache, debugOut, argv) {
+async function handle (config, hikaru, readFile, aliasCache, debugOut, argv) {
   if (argv.ca) {
     config.ca = readFile(argv.ca)
   }
@@ -121,42 +121,38 @@ function handle (config, hikaru, readFile, aliasCache, debugOut, argv) {
   if (!argv.job || !/[.]/.test(argv.job)) {
     console.log(`the job name is required and must include the namespace and job name in 'namespace.job' format`)
     process.exit(-1)
-  } else {
-    const [ namespace, jobName ] = argv.job.split('.')
-    options.namespace = namespace
-    options.job = jobName
   }
+
+  const [ namespace, jobName ] = argv.job.split('.')
+  options.namespace = namespace
+  options.job = jobName
 
   bole.output({
     level: argv.verbose ? 'debug' : 'info',
     stream: debugOut
   })
 
-  hikaru.runJob(argv.source, options)
-    .then(
-      () => console.log('done'),
-      err => {
-        if (err.tokens) {
-          console.log(`${err.tokens.length} tokens were found in the specification. When prompted, please provide a value for each.`)
-          return inquire.acquireTokens(err.tokens)
-            .then(
-              tokens => {
-                if (options.data !== undefined) {
-                  options.data = Object.assign(options.data, tokens)
-                } else {
-                  options.data = tokens
-                }
-                return hikaru.deployCluster(err.specPath, {
-                  data: options.data
-                })
-              }
-            )
-        } else {
-          console.error(`There was a problem in the specification at '${argv.source}'.\n ${err}`)
-          process.exit(100)
-        }
+  await hikaru.runJob(argv.source, options)
+    .catch(async err => {
+      if (!err.tokens) {
+        console.error(`There was a problem in the specification at '${argv.source}'.\n ${err.stack}`)
+        process.exit(100)
       }
-    )
+      console.log(`${err.tokens.length} tokens were found in the specification. When prompted, please provide a value for each.`)
+      const tokens = await inquire.acquireTokens(err.tokens)
+      if (options.data !== undefined) {
+        options.data = Object.assign(options.data, tokens)
+      } else {
+        options.data = tokens
+      }
+      return hikaru.runJob(argv.source, {
+        data: options.data,
+        namespace,
+        job: jobName
+      })
+    })
+
+  console.log('done')
 }
 
 module.exports = function (config, hikaru, readFile, aliasCache, debugOut) {
