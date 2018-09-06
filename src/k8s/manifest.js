@@ -40,7 +40,7 @@ function checkManifest (client, manifest, outcome, resolve, limit, wait) {
         log.debug(`service '${namespace}.${name}' deleted successfully.`)
         return
       } else {
-        log.debug(`checking service '${namespace}.${name}' status - resulted in API error. Checking again in ${next} ms.`)
+        log.debug(`checking service '${namespace}.${name}' status - resulted in API error. Checking again soon.`)
         throw new Error('continue')
       }
     }

@@ -5,7 +5,6 @@ const diffs = require('./specDiff')
 const parse = require('../imageParser').parse
 const retry = require('../retry')
 
-
 const GROUPS = {
   '1.4': 'extensions/v1beta1',
   '1.5': 'extensions/v1beta1',
@@ -32,7 +31,7 @@ function multiple (client, namespace, name) {
   return base(client, namespace).daemonsets
 }
 
-async function checkDaemonSet (client, namespace, name, outcome,) {
+async function checkDaemonSet (client, namespace, name, outcome) {
   retry(async bail => {
     log.debug(`checking daemonSet status '${namespace}.${name}' for '${outcome}'`)
     try {
