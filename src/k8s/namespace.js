@@ -1,37 +1,35 @@
 const log = require('bole')('k8s')
 const Promise = require('bluebird')
+const retry = require('../retry')
 
-function checkNamespace (client, namespace, outcome, resolve, wait) {
+async function checkNamespace (client, namespace, outcome, resolve, wait) {
   let ms = wait || 250
   let next = ms + (ms / 2)
   log.debug(`checking namespace status '${namespace}' for '${outcome}'`)
-  setTimeout(() => {
-    client.namespace(namespace).get()
-      .then(
-        result => {
-          log.debug(`namespace '${namespace}' status - '${result.status.phase}'`)
-          if (outcome === 'creation' && result.status.phase === 'Active') {
-            resolve(result)
-          } else if (outcome === 'deletion' && result.status.phase !== 'Terminating') {
-            resolve(result)
-          } else {
-            checkNamespace(client, namespace, outcome, resolve, next)
-          }
-        },
-        () => {
-          if (outcome === 'deletion') {
-            log.debug(`namespace '${namespace}' deleted successfully`)
-            resolve()
-          } else {
-            log.debug(`namespace '${namespace}' status - resulted in API error. Checking again in ${next} ms.`)
-            checkNamespace(client, namespace, outcome, resolve, next)
-          }
-        }
-      )
-  }, ms)
+  return retry(async () => {
+    try {
+      var result = await client.namespace(namespace).get()
+    } catch (err) {
+      if (outcome === 'deletion') {
+        log.debug(`namespace '${namespace}' deleted successfully`)
+        return
+      } else {
+        log.debug(`namespace '${namespace}' status - resulted in API error. Checking again in ${next} ms.`)
+        throw new Error('continue')
+      }
+    }
+
+    log.debug(`namespace '${namespace}' status - '${result.status.phase}'`)
+    if (outcome === 'creation' && result.status.phase === 'Active') {
+      return result
+    } else if (outcome === 'deletion' && result.status.phase !== 'Terminating') {
+      return result
+    }
+    throw new Error('continue')
+  })
 }
 
-function createNamespace (client, namespace) {
+async function createNamespace (client, namespace) {
   const namespaceSpec = {
     apiVersion: 'v1',
     kind: 'Namespace',
@@ -42,52 +40,41 @@ function createNamespace (client, namespace) {
       }
     }
   }
-  return getNamespace(client, namespace)
-    .then(
-      result => result,
-      () => client
-        .namespaces
-        .create(namespaceSpec)
-        .then(
-          null,
-          err => {
-            throw new Error(`Namespace '${namespace}' failed to create:\n\t${err.message}`)
-          }
-        )
-    )
+
+  try {
+    var result = await getNamespace(client, namespace)
+  } catch (err) {
+    result = await client.namespaces.create(namespaceSpec)
+      .catch(err => {
+        throw new Error(`Namespace '${namespace}' failed to create:\n\t${err.message}`)
+      })
+  }
+  return result
 }
 
-function deleteNamespace (client, namespace) {
-  return new Promise((resolve, reject) => {
-    return getNamespace(client, namespace)
-      .then(
-        () => {
-          client.namespace(namespace).delete()
-            .then(
-              result =>
-                checkNamespace(client, namespace, 'deletion', resolve),
-              err => reject(new Error(`Namespace '${namespace}' could not be deleted:\n\t${err.message}`))
-            )
-        },
-        () => { resolve() }
-      )
-  })
+async function deleteNamespace (client, namespace) {
+  try {
+    await getNamespace(client, namespace)
+  } catch (err) {
+    return
+  }
+  await client.namespace(namespace).delete()
+  await checkNamespace(client, namespace, 'deletion')
+    .catch(err => {
+      throw new Error(`Namespace '${namespace}' could not be deleted:\n\t${err.message}`)
+    })
 }
 
 function getNamespace (client, namespace, image) {
   return client.namespace(namespace).get()
 }
 
-function listNamespaces (client) {
-  return client
-    .namespaces
-    .list()
-    .then(
-      list => list.items.map(item => item.metadata.name)
-    )
+async function listNamespaces (client) {
+  const list = await client.namespaces.list()
+  return list.items.map(item => item.metadata.name)
 }
 
-function fixNamespaceLabels (client) {
+async function fixNamespaceLabels (client) {
   const getUpdate = (namespace) => {
     return {
       apiVersion: 'v1',
@@ -101,22 +88,16 @@ function fixNamespaceLabels (client) {
     }
   }
   log.info('Checking existing namespaces for missing name labels')
-  return client
-    .namespaces
-    .list()
-    .then(
-      list => Promise.all(
-        list.items.map(item => {
-          let name = item.metadata.name
-          if (!item.metadata.labels || !item.metadata.labels.name || item.metadata.labels.name !== name) {
-            log.info(`Adding name label to namespace ${name}`)
-            return client.namespace(name).patch(getUpdate(name))
-          } else {
-            return Promise.resolve()
-          }
-        })
-      )
-    )
+  const list = await client.namespaces.list()
+  return Promise.all(
+    list.items.map(async item => {
+      let name = item.metadata.name
+      if (!item.metadata.labels || !item.metadata.labels.name || item.metadata.labels.name !== name) {
+        log.info(`Adding name label to namespace ${name}`)
+        return client.namespace(name).patch(getUpdate(name))
+      }
+    })
+  )
 }
 
 module.exports = function (client) {

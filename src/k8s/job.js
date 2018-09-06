@@ -1,6 +1,5 @@
 const _ = require('lodash')
 const log = require('bole')('k8s')
-const Promise = require('bluebird')
 const diffs = require('./specDiff')
 const retry = require('../retry')
 
