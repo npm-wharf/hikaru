@@ -1,6 +1,5 @@
 const _ = require('lodash')
 const log = require('bole')('k8s')
-const Promise = require('bluebird')
 const diffs = require('./specDiff')
 const retry = require('../retry')
 
@@ -27,8 +26,7 @@ function checkService (client, namespace, name, outcome) {
         log.debug(`service '${namespace}.${name}' deleted successfully.`)
         return
       } else {
-        log.debug(`checking service '${namespace}.${name}' status - resulted in API error. Checking again in ${next} ms.`)
-        checkService(client, namespace, name, outcome, resolve, next)
+        log.debug(`checking service '${namespace}.${name}' status - resulted in API error. Checking again soon.`)
         throw new Error('continue')
       }
     }
@@ -74,6 +72,7 @@ async function createService (client, deletes, service) {
       await deleteService(client, namespace, name)
       await create()
     }
+  }
 }
 
 async function deleteService (client, namespace, name) {
