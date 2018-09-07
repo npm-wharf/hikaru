@@ -27,7 +27,7 @@ function multiple (client, namespace) {
 }
 
 async function checkCronJob (client, namespace, name, outcome) {
-  retry(async bail => {
+  return retry(async bail => {
     log.debug(`checking cron job status '${namespace}.${name}' for '${outcome}'`)
     try {
       var result = await single(client, namespace, name).get()

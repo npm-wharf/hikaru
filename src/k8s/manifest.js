@@ -27,12 +27,12 @@ function multiple (client, manifest) {
   return base(client, manifest)[plural]
 }
 
-function checkManifest (client, manifest, outcome, resolve, limit, wait) {
+async function checkManifest (client, manifest, outcome, resolve, limit, wait) {
   const namespace = manifest.metadata.namespace || 'default'
   const name = manifest.metadata.name
-  log.debug(`checking service status '${namespace}.${name}' for '${outcome}'`)
 
   return retry(async () => {
+    log.debug(`checking service status '${namespace}.${name}' for '${outcome}'`)
     try {
       var result = await single(client, manifest).get()
     } catch (err) {

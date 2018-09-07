@@ -16,8 +16,8 @@ function multiple (client, namespace, name) {
   return base(client, namespace).services
 }
 
-function checkService (client, namespace, name, outcome) {
-  retry(async () => {
+async function checkService (client, namespace, name, outcome) {
+  await retry(async () => {
     log.debug(`checking service status '${namespace}.${name}' for '${outcome}'`)
     try {
       var result = await single(client, namespace, name).get()

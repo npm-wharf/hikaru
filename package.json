@@ -43,7 +43,7 @@
     "standard-version": "^4.2.0"
   },
   "scripts": {
-    "lint": "standard",
+    "lint": "standard --fix",
     "pretest": "standard",
     "test": "node_modules/mocha/bin/mocha spec/**/*.spec.js",
     "coverage": "nyc npm test",
