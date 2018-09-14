@@ -11,7 +11,7 @@ function group (client) {
   return GROUPS[client.version]
 }
 
-async function base (client, namespace) {
+function base (client, namespace) {
   if (namespace) {
     return client
       .group(group(client))
@@ -22,7 +22,7 @@ async function base (client, namespace) {
   }
 }
 
-async function single (client, name, namespace) {
+function single (client, name, namespace) {
   if (namespace) {
     return base(client, namespace)
       .rolebinding(name)
@@ -32,7 +32,7 @@ async function single (client, name, namespace) {
   }
 }
 
-async function multiple (client, namespace) {
+function multiple (client, namespace) {
   if (namespace) {
     return base(client, namespace)
       .rolebindings
