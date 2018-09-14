@@ -6,13 +6,12 @@ const _ = require('lodash')
 
 fount.register('cluster', require('./cluster'))
 fount.register('k8s', require('./k8s'))
-fount.register('client', async (config) => {
-  const client = await connection.getClient(config)
+fount.register('client', config => {
+  return connection.getClient(config)
     .catch(err => {
       log.error(err.message)
       return null
     })
-  return client
 })
 fount.register('config', require('./config')())
 

@@ -44,6 +44,7 @@ async function createNamespace (client, namespace) {
   try {
     var result = await getNamespace(client, namespace)
   } catch (err) {
+    log.error(err.stack)
     result = await client.namespaces.create(namespaceSpec)
       .catch(err => {
         throw new Error(`Namespace '${namespace}' failed to create:\n\t${err.message}`)

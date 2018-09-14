@@ -122,7 +122,7 @@ function handle (config, hikaru, readFile, aliasCache, debugOut, argv) {
   hikaru.deployCluster(argv.source, options)
     .catch(async err => {
       if (!err.tokens) {
-        console.error(`There was a problem in the specification at '${argv.source}'.\n ${err}`)
+        console.error(`There was a problem in the specification at '${argv.source}'.\n ${err.stack}`)
         process.exit(100)
       }
       console.log(`${err.tokens.length} tokens were found in the specification. When prompted, please provide a value for each.`)
