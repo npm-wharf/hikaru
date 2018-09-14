@@ -77,7 +77,7 @@ async function createService (client, deletes, service) {
 
 async function deleteService (client, namespace, name) {
   try {
-    single(client, namespace, name).get()
+    await single(client, namespace, name).get()
   } catch (e) {
     return
   }

@@ -111,7 +111,7 @@ async function deleteCronJob (client, namespace, name) {
   } catch (err) {
     return
   }
-  single(client, namespace, name).delete()
+  await single(client, namespace, name).delete()
     .catch(err => {
       throw new Error(`Job '${namespace}.${name}' could not be deleted:\n\t${err.message}`)
     })

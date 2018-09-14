@@ -1,7 +1,7 @@
 const K8sClient = require('auto-kubernetes-client')
 const log = require('bole')('connection')
 
-function getClient (config) {
+async function getClient (config) {
   validate(config)
   const connection = {
     url: config.url
@@ -56,18 +56,15 @@ function getClient (config) {
   }
 
   log.debug(`connecting to '${connection.url}' ...`)
-  return K8sClient(connection)
-    .then(
-      client => {
-        client.version = config.version
-        client.saveDiffs = config.saveDiffs
-        return client
-      },
-      err => {
-        log.error(`could not connect to '${connection.url}':\n\t${err.message}`)
-        throw new Error(`failed to connect to Kubernetes cluster '${config.url}' with ${creds}:\n\t'${err.message}'`)
-      }
-    )
+  try {
+    var client = await K8sClient(connection)
+  } catch (err) {
+    log.error(`could not connect to '${connection.url}':\n\t${err.message}`)
+    throw new Error(`failed to connect to Kubernetes cluster '${config.url}' with ${creds}:\n\t'${err.message}'`)
+  }
+  client.version = config.version
+  client.saveDiffs = config.saveDiffs
+  return client
 }
 
 function validate (config) {

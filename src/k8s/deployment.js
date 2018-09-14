@@ -96,7 +96,7 @@ async function deleteDeployment (client, namespace, name) {
   } catch (e) {
     return
   }
-  single(client, namespace, name).delete()
+  await single(client, namespace, name).delete()
     .catch(err => {
       throw new Error(`Deployment '${namespace}.${name}' could not be deleted:\n\t${err.message}`)
     })

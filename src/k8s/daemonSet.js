@@ -61,7 +61,7 @@ async function createDaemonSet (client, deletes, daemonSet) {
   const name = daemonSet.metadata.name
 
   let create = async () => {
-    multiple(client, namespace).create(daemonSet)
+    await multiple(client, namespace).create(daemonSet)
       .catch(err => {
         throw new Error(`DaemonSet '${namespace}.${name}' failed to create:\n\t${err.message}`)
       })
