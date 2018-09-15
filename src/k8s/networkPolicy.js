@@ -42,8 +42,7 @@ async function createNetworkPolicy (client, deletes, networkPolicy) {
   try {
     var loaded = await single(client, namespace, name).get()
   } catch (err) {
-    await create()
-    return
+    return create()
   }
   const diff = diffs.simple(loaded, networkPolicy)
   if (!_.isEmpty(diff)) {

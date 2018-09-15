@@ -15,7 +15,7 @@ async function checkNamespace (client, namespace, outcome, resolve, wait) {
         return
       } else {
         log.debug(`namespace '${namespace}' status - resulted in API error. Checking again in ${next} ms.`)
-        throw new Error('continue')
+        throw new Error('namespace not ready yet')
       }
     }
 
@@ -25,7 +25,7 @@ async function checkNamespace (client, namespace, outcome, resolve, wait) {
     } else if (outcome === 'deletion' && result.status.phase !== 'Terminating') {
       return result
     }
-    throw new Error('continue')
+    throw new Error('namespace not ready yet')
   })
 }
 
@@ -44,7 +44,6 @@ async function createNamespace (client, namespace) {
   try {
     var result = await getNamespace(client, namespace)
   } catch (err) {
-    log.error(err.stack)
     result = await client.namespaces.create(namespaceSpec)
       .catch(err => {
         throw new Error(`Namespace '${namespace}' failed to create:\n\t${err.message}`)

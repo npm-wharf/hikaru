@@ -45,9 +45,9 @@
   "scripts": {
     "lint": "standard --fix",
     "pretest": "standard",
-    "test": "node_modules/mocha/bin/mocha spec/**/*.spec.js",
+    "test": "mocha spec/**/*.spec.js",
     "coverage": "nyc npm test",
-    "continuous": "./node_modules/mocha/bin/mocha spec/*.spec.js -w",
+    "continuous": "mocha spec/*.spec.js -w",
     "release": "standard-version",
     "standard": "standard --fix"
   },

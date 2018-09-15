@@ -28,7 +28,7 @@ async function checkJob (client, namespace, name, outcome) {
         return
       } else {
         log.debug(`job '${namespace}.${name}' status check got API error. Checking again soon.`)
-        throw new Error('continue')
+        throw new Error('job not ready yet')
       }
     }
 
@@ -52,7 +52,7 @@ async function checkJob (client, namespace, name, outcome) {
     } catch (e) {
       log.error(`error checking result '${JSON.stringify(result, null, 2)}':\n\t${e}`)
     }
-    throw new Error('continue')
+    throw new Error('job not ready yet')
   })
 }
 
@@ -69,7 +69,7 @@ async function createJob (client, deletes, jobSpec) {
   try {
     var loaded = await single(client, namespace, name).get()
   } catch (err) {
-    await create()
+    return create()
   }
   const diff = diffs.simple(loaded, jobSpec)
   if (!_.isEmpty(diff)) {

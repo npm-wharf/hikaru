@@ -42,7 +42,7 @@ async function checkStatefulSet (client, namespace, name, outcome) {
         return
       } else {
         log.debug(`statefulSet '${namespace}.${name}' status check got API error. Checking again soon.`)
-        throw new Error('continue')
+        throw new Error('stateful set not ready yet')
       }
     }
 
@@ -55,7 +55,7 @@ async function checkStatefulSet (client, namespace, name, outcome) {
       return result
     }
 
-    throw new Error('continue')
+    throw new Error('stateful set not ready yet')
   })
 }
 

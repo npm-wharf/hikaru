@@ -37,7 +37,7 @@ async function checkCronJob (client, namespace, name, outcome) {
         return result
       } else {
         log.debug(`cron job '${namespace}.${name}' status check got API error. Checking again in soon.`)
-        throw new Error('continue')
+        throw new Error('cron job not ready yet')
       }
     }
 
@@ -67,7 +67,7 @@ async function checkCronJob (client, namespace, name, outcome) {
     } catch (e) {
       log.error(`error checking result '${JSON.stringify(result, null, 2)}':\n\t${e}`)
     }
-    throw new Error('continue')
+    throw new Error('cron job not ready yet')
   })
 }
 

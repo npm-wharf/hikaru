@@ -41,7 +41,7 @@ async function checkManifest (client, manifest, outcome, resolve, limit, wait) {
         return
       } else {
         log.debug(`checking service '${namespace}.${name}' status - resulted in API error. Checking again soon.`)
-        throw new Error('continue')
+        throw new Error('manifest not ready yet')
       }
     }
     log.debug(`service '${namespace}.${name}' status - '${JSON.stringify(result, null, 2)}'`)
@@ -52,7 +52,7 @@ async function checkManifest (client, manifest, outcome, resolve, limit, wait) {
     } else if (limit <= 0) {
       return result
     }
-    throw new Error('continue')
+    throw new Error('manifest not ready yet')
   })
 }
 

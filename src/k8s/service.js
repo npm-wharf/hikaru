@@ -27,7 +27,7 @@ async function checkService (client, namespace, name, outcome) {
         return
       } else {
         log.debug(`checking service '${namespace}.${name}' status - resulted in API error. Checking again soon.`)
-        throw new Error('continue')
+        throw new Error('service not ready yet')
       }
     }
 
@@ -37,7 +37,7 @@ async function checkService (client, namespace, name, outcome) {
     } else if (outcome === 'update' && result.status.loadBalancer) {
       return result
     }
-    throw new Error('continue')
+    throw new Error('service not ready yet')
   })
 }
 
@@ -56,8 +56,7 @@ async function createService (client, deletes, service) {
   try {
     var loaded = await single(client, namespace, name).get()
   } catch (e) {
-    await create()
-    return
+    return create()
   }
   const diff = diffs.simple(loaded, service)
   if (!_.isEmpty(diff)) {

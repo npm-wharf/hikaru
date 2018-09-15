@@ -42,7 +42,7 @@ async function checkDeployment (client, namespace, name, outcome) {
         return
       } else {
         log.debug(`deployment '${namespace}.${name}' status check got API error. Checking again...`)
-        throw new Error('continue')
+        throw new Error('deployment not ready yet')
       }
     }
     log.debug(`deployment '${namespace}.${name}' status - '${JSON.stringify(result.status, null, 2)}'`)
@@ -52,9 +52,8 @@ async function checkDeployment (client, namespace, name, outcome) {
       return result
     } else if (outcome === 'deletion' && result.status.phase !== 'Terminating') {
       return result
-    } else {
-      throw new Error('continue')
     }
+    throw new Error('deployment not ready yet')
   })
 }
 

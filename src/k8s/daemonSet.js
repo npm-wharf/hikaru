@@ -42,7 +42,7 @@ async function checkDaemonSet (client, namespace, name, outcome) {
         return
       } else {
         log.debug(`daemonSet '${namespace}.${name}' status check got API error. Checking again soon.`)
-        bail(new Error('continue'))
+        bail(new Error('daemon set not ready yet'))
       }
     }
 
@@ -52,7 +52,7 @@ async function checkDaemonSet (client, namespace, name, outcome) {
     } else if (outcome === 'deletion' && result.status.phase !== 'Terminating') {
       return result
     }
-    bail(new Error('continue'))
+    bail(new Error('daemon set not ready yet'))
   })
 }
 
