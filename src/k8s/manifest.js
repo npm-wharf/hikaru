@@ -27,7 +27,7 @@ function multiple (client, manifest) {
   return base(client, manifest)[plural]
 }
 
-async function checkManifest (client, manifest, outcome, resolve, limit, wait) {
+async function checkManifest (client, manifest, outcome) {
   const namespace = manifest.metadata.namespace || 'default'
   const name = manifest.metadata.name
 
@@ -48,8 +48,6 @@ async function checkManifest (client, manifest, outcome, resolve, limit, wait) {
     if (outcome === 'creation' && result.status) {
       return result
     } else if (outcome === 'update' && result.status) {
-      return result
-    } else if (limit <= 0) {
       return result
     }
     throw new Error('manifest not ready yet')

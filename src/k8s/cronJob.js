@@ -36,7 +36,7 @@ async function checkCronJob (client, namespace, name, outcome) {
         log.debug(`cron job '${namespace}.${name}' deleted successfully.`)
         return result
       } else {
-        log.debug(`cron job '${namespace}.${name}' status check got API error. Checking again in soon.`)
+        log.debug(`cron job '${namespace}.${name}' status check got API error. Checking again soon.`)
         throw new Error('cron job not ready yet')
       }
     }

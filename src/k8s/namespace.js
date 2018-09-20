@@ -2,9 +2,7 @@ const log = require('bole')('k8s')
 const Promise = require('bluebird')
 const retry = require('../retry')
 
-async function checkNamespace (client, namespace, outcome, resolve, wait) {
-  let ms = wait || 250
-  let next = ms + (ms / 2)
+async function checkNamespace (client, namespace, outcome) {
   log.debug(`checking namespace status '${namespace}' for '${outcome}'`)
   return retry(async () => {
     try {
@@ -14,7 +12,7 @@ async function checkNamespace (client, namespace, outcome, resolve, wait) {
         log.debug(`namespace '${namespace}' deleted successfully`)
         return
       } else {
-        log.debug(`namespace '${namespace}' status - resulted in API error. Checking again in ${next} ms.`)
+        log.debug(`namespace '${namespace}' status - resulted in API error. Checking again soon.`)
         throw new Error('namespace not ready yet')
       }
     }

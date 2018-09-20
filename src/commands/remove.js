@@ -56,7 +56,7 @@ function build (config, aliasCache) {
   }
 }
 
-function handle (config, hikaru, readFile, aliasCache, debugOut, argv) {
+async function handle (config, hikaru, readFile, aliasCache, debugOut, argv) {
   if (argv.ca) {
     config.ca = readFile(argv.ca)
   }
@@ -102,7 +102,7 @@ function handle (config, hikaru, readFile, aliasCache, debugOut, argv) {
     stream: debugOut
   })
 
-  hikaru.removeCluster(argv.source, options)
+  await hikaru.removeCluster(argv.source, options)
     .catch(async err => {
       if (!err.tokens) {
         console.error(`There was a problem in the specification at '${argv.source}'.\n ${err.stack}`)
