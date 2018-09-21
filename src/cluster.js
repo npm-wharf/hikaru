@@ -1,6 +1,5 @@
 const Promise = require('bluebird')
 const _ = require('lodash')
-const join = Promise.join
 const log = require('bole')('cluster')
 const parse = require('./imageParser').parse
 const compare = require('./imageComparer').compare
@@ -23,249 +22,196 @@ const MANIFEST_KIND_FILTER = [
   'StatefulSet'
 ]
 
-function createAccount (k8s, resources) {
-  let accountPromise
+async function createAccount (k8s, resources) {
   if (resources.account) {
     log.info(`    creating account '${resources.account.metadata.name}'`)
-    accountPromise = k8s.createAccount(resources.account)
-      .then(
-        onAccountCreated.bind(null, k8s, resources),
+    await k8s.createAccount(resources.account)
+      .catch(
         onAccountCreationFailed.bind(null, resources.account)
       )
-  } else {
-    accountPromise = Promise.resolve()
+    await createRole(k8s, resources)
+    await createRoleBinding(k8s, resources)
   }
-  return accountPromise
 }
 
-function createConfiguration (k8s, cluster) {
+async function createConfiguration (k8s, cluster) {
   const promises = cluster.configuration.map(configuration => {
     log.info(`creating configuration map: '${configuration.metadata.namespace}.${configuration.metadata.name}'`)
     return k8s.createConfiguration(configuration)
   })
-  return Promise.all(promises)
+  await Promise.all(promises)
 }
 
-function createContainer (k8s, resources) {
+async function createContainer (k8s, resources) {
   const spec = getContainerSpec(resources)
-  const create = () => {
-    return getContainer(k8s, resources)
-      .then(
-        null,
-        onContainerCreationFailed.bind(null, spec)
-      )
-  }
   if (resources.job || resources.cronjob) {
-    return createContainerServices(k8s, resources)
-      .then(create)
-  } else {
-    return create()
+    await createContainerServices(k8s, resources)
   }
+  await getContainer(k8s, resources)
+    .catch(
+      onContainerCreationFailed.bind(null, spec)
+    )
 }
 
-function createContainerServices (k8s, resources) {
+async function createContainerServices (k8s, resources) {
   const services = resources.services || []
-  return Promise.all(services.map(service => {
+  await Promise.all(services.map(service => {
     log.info(`    creating service '${service.metadata.name}'`)
     return k8s.createService(service)
-      .then(
-        null,
+      .catch(
         onServiceCreationFailed.bind(null, service)
       )
   }))
 }
 
-function createLevels (k8s, cluster) {
-  return Promise.each(cluster.levels, (level) => {
+async function createLevels (k8s, cluster) {
+  await Promise.each(cluster.levels, (level) => {
     log.info(`creating level: ${level}`)
     return createServicesInLevel(k8s, level, cluster)
   })
 }
 
-function createNamespaces (k8s, cluster) {
+async function createNamespaces (k8s, cluster) {
   const promises = cluster.namespaces.map(namespace => {
     log.info(`creating namespace: '${namespace}'`)
     return k8s.createNamespace(namespace)
   })
-  promises.push(k8s.fixNamespaceLabels())
-  return Promise.all(promises)
+  await Promise.all(promises)
+  await k8s.fixNamespaceLabels()
 }
 
-function createNetworkPolicy (k8s, resources) {
-  let policyPromise
+async function createNetworkPolicy (k8s, resources) {
   if (resources.networkPolicy) {
     log.info(`  creating network policy '${resources.networkPolicy.metadata.namespace}.${resources.networkPolicy.metadata.name}'`)
-    policyPromise = k8s.createNetworkPolicy(resources.networkPolicy)
-      .then(
-        null,
+    await k8s.createNetworkPolicy(resources.networkPolicy)
+      .catch(
         onNetworkPolicyCreationFailed.bind(null, resources.networkPolicy)
       )
-  } else {
-    policyPromise = Promise.resolve()
   }
-  return policyPromise
 }
 
-function createRole (k8s, resources) {
-  let bindingPromise
+async function createRole (k8s, resources) {
   if (resources.role) {
     log.info(`    creating role '${resources.roleBinding.metadata.namespace || 'Cluster'}.${resources.roleBinding.metadata.name}'`)
-    bindingPromise = k8s.createRole(resources.role)
-      .then(
-        null,
+    await k8s.createRole(resources.role)
+      .catch(
         onRoleCreationFailed.bind(null, resources.role)
       )
-  } else {
-    bindingPromise = Promise.resolve()
   }
-  return bindingPromise
 }
 
-function createRoleBinding (k8s, resources) {
-  let bindingPromise
+async function createRoleBinding (k8s, resources) {
   if (resources.roleBinding) {
     log.info(`    creating role binding '${resources.roleBinding.metadata.namespace || 'Cluster'}.${resources.roleBinding.metadata.name}'`)
-    bindingPromise = k8s.createRoleBinding(resources.roleBinding)
-      .then(
-        null,
+    await k8s.createRoleBinding(resources.roleBinding)
+      .catch(
         onRoleBindingCreationFailed.bind(null, resources.roleBinding)
       )
-  } else {
-    bindingPromise = Promise.resolve()
   }
-  return bindingPromise
 }
 
-function createServicesInLevel (k8s, level, cluster) {
+async function createServicesInLevel (k8s, level, cluster) {
   const promises = cluster.order[level].reduce((acc, serviceName) => {
     log.info(`  creating resources for '${serviceName}'`)
     return acc.concat(createServiceResources(k8s, cluster.services[serviceName]))
   }, [])
-  return Promise.all(promises)
+  await Promise.all(promises)
 }
 
-function createServiceResources (k8s, resources) {
-  return createAccount(k8s, resources)
-    .then(
-      () => {
-        return createContainer(k8s, resources)
-          .then(
-            onContainerCreated.bind(null, k8s, resources)
-          )
-      }
-    )
+async function createServiceResources (k8s, resources) {
+  await createAccount(k8s, resources)
+  await createContainer(k8s, resources)
+  await createContainerServices(k8s, resources)
+  await createNetworkPolicy(k8s, resources)
 }
 
-function deleteAccount (k8s, resources) {
-  let accountPromise
+async function deleteAccount (k8s, resources) {
   if (resources.account) {
     log.info(`    deleting account '${resources.account.metadata.name}'`)
-    accountPromise = k8s.deleteAccount(resources.account)
-      .then(
-        null,
+    await k8s.deleteAccount(resources.account)
+      .catch(
         onAccountDeletionFailed.bind(null, resources.account)
       )
-  } else {
-    accountPromise = Promise.resolve()
   }
-  return accountPromise
 }
 
-function deleteConfiguration (k8s, cluster) {
-  const promises = cluster.configuration.map(configuration => {
+async function deleteConfiguration (k8s, cluster) {
+  const promises = cluster.configuration.map(async configuration => {
     log.info(`deleting configuration map: '${configuration.metadata.namespace}.${configuration.metadata.name}'`)
     if (_.includes(RESERVED_NAMESPACES, configuration.metadata.namespace)) {
-      return k8s.deleteConfiguration(configuration)
+      await k8s.deleteConfiguration(configuration)
     }
-    return Promise.resolve()
   })
-  return Promise.all(promises)
+  await Promise.all(promises)
 }
 
-function deleteContainer (k8s, resources) {
+async function deleteContainer (k8s, resources) {
   const spec = getContainerSpec(resources)
-  return removeContainer(k8s, resources)
-    .then(
-      null,
+  await removeContainer(k8s, resources)
+    .catch(
       onContainerDeletionFailed.bind(null, spec)
     )
 }
 
-function deleteContainerServices (k8s, resources) {
+async function deleteContainerServices (k8s, resources) {
   const services = resources.services || []
-  return Promise.all(services.map(service => {
+  await Promise.all(services.map(async service => {
     log.info(`    deleting service '${service.metadata.name}'`)
-    return k8s.deleteService(service)
-      .then(
-        null,
+    await k8s.deleteService(service)
+      .catch(
         onServiceDeletionFailed.bind(null, service)
       )
   }))
 }
 
-function deleteLevels (k8s, cluster) {
+async function deleteLevels (k8s, cluster) {
   cluster.levels.reverse()
-  return Promise.each(cluster.levels, (level) => {
+  await Promise.each(cluster.levels, (level) => {
     log.info(`deleting level: ${level}`)
     return deleteServicesInLevel(k8s, level, cluster)
   })
 }
 
-function deleteNamespaces (k8s, cluster) {
+async function deleteNamespaces (k8s, cluster) {
   const namespaces = _.difference(cluster.namespaces, RESERVED_NAMESPACES)
   const promises = namespaces.map(namespace => {
     log.info(`deleting namespace: '${namespace}'`)
     return k8s.deleteNamespace(namespace)
   })
-  return Promise.all(promises)
+  await Promise.all(promises)
 }
 
-function deleteNetworkPolicy (k8s, resources) {
-  let policyPromise
+async function deleteNetworkPolicy (k8s, resources) {
   if (resources.networkPolicy) {
     log.info(`  deleting network policy '${resources.networkPolicy.metadata.namespace}.${resources.networkPolicy.metadata.name}'`)
-    policyPromise = k8s.deleteNetworkPolicy(resources.networkPolicy)
-      .then(
-        null,
+    await k8s.deleteNetworkPolicy(resources.networkPolicy)
+      .catch(
         onNetworkPolicyDeletionFailed.bind(null, resources.networkPolicy)
       )
-  } else {
-    policyPromise = Promise.resolve()
   }
-  return policyPromise
 }
 
-function deleteRole (k8s, resources) {
-  let bindingPromise
+async function deleteRole (k8s, resources) {
   if (resources.role) {
     log.info(`    deleting role '${resources.roleBinding.metadata.namespace}'.${resources.roleBinding.metadata.name}'`)
-    bindingPromise = k8s.deleteRole(resources.roleBinding)
-      .then(
-        null,
+    await k8s.deleteRole(resources.roleBinding)
+      .catch(
         onRoleDeletionFailed.bind(null, resources.roleBinding)
       )
-  } else {
-    bindingPromise = Promise.resolve()
   }
-  return bindingPromise
 }
 
-function deleteRoleBinding (k8s, resources) {
-  let bindingPromise
+async function deleteRoleBinding (k8s, resources) {
   if (resources.roleBinding) {
     log.info(`    deleting role binding '${resources.roleBinding.metadata.name}'`)
-    bindingPromise = k8s.deleteRoleBinding(resources.roleBinding)
-      .then(
-        null,
+    await k8s.deleteRoleBinding(resources.roleBinding)
+      .catch(
         onRoleBindingDeletionFailed.bind(null, resources.roleBinding)
       )
-  } else {
-    bindingPromise = Promise.resolve()
   }
-  return bindingPromise
 }
 
-function deleteServicesInLevel (k8s, level, cluster) {
+async function deleteServicesInLevel (k8s, level, cluster) {
   const promises = cluster.order[level].reduce((acc, serviceName) => {
     const reserved = _.includes(RESERVED_NAMESPACES, cluster.services[serviceName].namespace)
     if (reserved) {
@@ -275,22 +221,34 @@ function deleteServicesInLevel (k8s, level, cluster) {
       return acc
     }
   }, [])
-  return Promise.all(promises)
+  await Promise.all(promises)
 }
 
-function deleteServiceResources (k8s, resources) {
-  return deleteAccount(k8s, resources)
-    .then(
-      onAccountDeleted.bind(null, k8s, resources)
-    )
+async function deleteServiceResources (k8s, resources) {
+  await deleteAccount(k8s, resources)
+  await deleteRoleBinding(k8s, resources)
+  await deleteRole(k8s, resources)
+  await deleteContainer(k8s, resources)
+  await deleteContainerServices(k8s, resources)
 }
 
-function deployCluster (k8s, cluster) {
-  return createNamespaces(k8s, cluster)
-    .then(
-      onNamespacesCreated.bind(null, k8s, cluster),
+async function deployCluster (k8s, cluster) {
+  await createNamespaces(k8s, cluster)
+    .catch(
       onNamespaceCreationFailed.bind(null, cluster)
     )
+  log.info('namespaces created')
+
+  await createConfiguration(k8s, cluster)
+    .catch(onConfigurationCreationFailed.bind(null, cluster))
+    .catch(exitOnError)
+  log.info('configuration maps created')
+
+  await createLevels(k8s, cluster)
+    .catch(onResourcesFailed)
+    .catch(exitOnError)
+
+  log.info('cluster initialization complete')
 }
 
 function exitOnError () {
@@ -302,66 +260,58 @@ function filterContainerManifests (manifest) {
     MANIFEST_KIND_FILTER.indexOf(manifest.kind) < 0
 }
 
-function findResourcesByImage (k8s, image) {
-  let testResource = (list, resource) => {
+async function findResourcesByImage (k8s, image) {
+  let testResource = list => resource => {
     if (resource.image.indexOf(image) >= 0) {
       list.push(resource)
     }
   }
 
-  return getImageMetadata(k8s, {baseImage: image})
-    .then(
-      images => {
-        const namespaces = Object.keys(images)
-        return namespaces.reduce((acc, namespace) => {
-          const resources = images[namespace]
-          resources.daemonSets.forEach(testResource.bind(null, acc))
-          resources.deployments.forEach(testResource.bind(null, acc))
-          resources.statefulSets.forEach(testResource.bind(null, acc))
-          return acc
-        }, [])
-      }
-    )
+  const images = await getImageMetadata(k8s, {baseImage: image})
+  const namespaces = Object.keys(images)
+  return namespaces.reduce((acc, namespace) => {
+    const resources = images[namespace]
+    resources.daemonSets.forEach(testResource(acc))
+    resources.deployments.forEach(testResource(acc))
+    resources.statefulSets.forEach(testResource(acc))
+    return acc
+  }, [])
 }
 
-function findResourcesByMetadata (k8s, metadata) {
-  let testResource = (list, resource) => {
+async function findResourcesByMetadata (k8s, metadata) {
+  let testResource = list => resource => {
     if (match(resource.metadata, metadata, resource.labels)) {
       list.push(resource)
     }
   }
 
-  return getImageMetadata(k8s)
-    .then(
-      images => {
-        const namespaces = Object.keys(images)
-        return namespaces.reduce((acc, namespace) => {
-          const resources = images[namespace]
-          resources.daemonSets.forEach(testResource.bind(null, acc))
-          resources.deployments.forEach(testResource.bind(null, acc))
-          resources.statefulSets.forEach(testResource.bind(null, acc))
-          return acc
-        }, [])
-      }
-    )
+  const images = await getImageMetadata(k8s)
+  const namespaces = Object.keys(images)
+  return namespaces.reduce((acc, namespace) => {
+    const resources = images[namespace]
+    resources.daemonSets.forEach(testResource(acc))
+    resources.deployments.forEach(testResource(acc))
+    resources.statefulSets.forEach(testResource(acc))
+    return acc
+  }, [])
 }
 
-function getContainer (k8s, resources) {
+async function getContainer (k8s, resources) {
   if (resources.daemonSet) {
     log.info(`    creating daemonSet '${resources.daemonSet.metadata.name}'`)
-    return k8s.createDaemonSet(resources.daemonSet)
+    await k8s.createDaemonSet(resources.daemonSet)
   } else if (resources.deployment) {
     log.info(`    creating deployment '${resources.deployment.metadata.name}'`)
-    return k8s.createDeployment(resources.deployment)
+    await k8s.createDeployment(resources.deployment)
   } else if (resources.statefulSet) {
     log.info(`    creating statefulSet '${resources.statefulSet.metadata.name}'`)
-    return k8s.createStatefulSet(resources.statefulSet)
+    await k8s.createStatefulSet(resources.statefulSet)
   } else if (resources.cronJob) {
     log.info(`    creating cronJob '${resources.cronJob.metadata.name}'`)
-    return k8s.createCronJob(resources.cronJob)
+    await k8s.createCronJob(resources.cronJob)
   } else if (resources.job) {
     log.info(`    creating job '${resources.job.metadata.name}'`)
-    return k8s.createJob(resources.job)
+    await k8s.createJob(resources.job)
   } else {
     const manifest = _.find(
       _.values(resources),
@@ -370,9 +320,7 @@ function getContainer (k8s, resources) {
     if (manifest) {
       const kind = manifest.kind.toLowerCase()
       log.info(`    creating ${kind} '${manifest.metadata.name}'`)
-      return k8s.createManifest(manifest)
-    } else {
-      return Promise.resolve()
+      await k8s.createManifest(manifest)
     }
   }
 }
@@ -397,51 +345,37 @@ function getContainerSpec (resources) {
   }
 }
 
-function getImageMetadata (k8s, options) {
-  return k8s.listNamespaces()
-    .then(
-      namespaces => {
-        return Promise.reduce(namespaces, (acc, namespace) => {
-          return getImageMetadataForNamespace(k8s, namespace, options)
-            .then(
-              result => {
-                acc[result.namespace] = result
-                return acc
-              },
-              err => {
-                log.error(`Failed to get image metadata for namespace '${namespace}':\n\t${err.stack}'`)
-              }
-            )
-        }, {})
-      },
-      err => {
-        log.error(`Failed to get image metadata - error while retrieving namespace list:\n\t${err.message}`)
-        throw err
-      }
-    )
+async function getImageMetadata (k8s, options) {
+  const namespaces = await k8s.listNamespaces()
+    .catch(err => {
+      log.error(`Failed to get image metadata - error while retrieving namespace list:\n\t${err.message}`)
+      throw err
+    })
+  return Promise.reduce(namespaces, async (acc, namespace) => {
+    const result = await getImageMetadataForNamespace(k8s, namespace, options)
+      .catch(err => {
+        log.error(`Failed to get image metadata for namespace '${namespace}':\n\t${err.stack}'`)
+      })
+
+    acc[result.namespace] = result
+    return acc
+  }, {})
 }
 
-function getImageMetadataForNamespace (k8s, namespace, options = {}) {
-  let getDeployments = () => k8s.getDeploymentsByNamespace(namespace, options.baseImage)
-  let getDaemons = () => k8s.getDaemonSetsByNamespace(namespace, options.baseImage)
-  let getStateful = () => k8s.getStatefulSetsByNamespace(namespace, options.baseImage)
-
-  return join(
-    getDeployments(),
-    getDaemons(),
-    getStateful(),
-    (deployments, daemons, sets) => {
-      const merged = Object.assign({}, deployments, daemons, sets)
-      return merged
-    }
-  )
+async function getImageMetadataForNamespace (k8s, namespace, options = {}) {
+  const [deployments, daemons, sets] = await Promise.all([
+    k8s.getDeploymentsByNamespace(namespace, options.baseImage),
+    k8s.getDaemonSetsByNamespace(namespace, options.baseImage),
+    k8s.getStatefulSetsByNamespace(namespace, options.baseImage)
+  ])
+  return Object.assign({}, deployments, daemons, sets)
 }
 
-function getNamespaces (k8s) {
-  return k8s.listNamespaces()
+async function getNamespaces (k8s) {
+  await k8s.listNamespaces()
 }
 
-function getUpgradeCandidates (k8s, image, options = {filter: ['imageName', 'imageOwner', 'owner', 'repo', 'branch']}) {
+async function getUpgradeCandidates (k8s, image, options = {filter: ['imageName', 'imageOwner', 'owner', 'repo', 'branch']}) {
   if (!options.filter || options.filter.length === 0) {
     throw new Error(`hikaru was given an upgrade command with image '${image} and no filter which would result in forcing all resources to the same image. This command would certainly destroy the cluster and is refused.`)
   }
@@ -449,22 +383,18 @@ function getUpgradeCandidates (k8s, image, options = {filter: ['imageName', 'ima
   let filter = _.pick(sourceMeta, options.filter)
   filter = _.pickBy(filter, _.identity)
   log.info(`identifying candidates for ${image} with filter fields '[${options.filter.join(', ')}]' for resources matching: ${JSON.stringify(filter)}`)
-  return findResourcesByMetadata(k8s, filter)
-    .then(
-      list => {
-        return list.reduce((acc, resource) => {
-          const diff = compare(resource.image, image)
-          resource.diff = diff
-          resource.comparedTo = image
-          if (acc[diff]) {
-            acc[diff].push(resource)
-          } else {
-            acc.error.push(resource)
-          }
-          return acc
-        }, {upgrade: [], obsolete: [], equal: [], error: []})
-      }
-    )
+  const list = await findResourcesByMetadata(k8s, filter)
+  return list.reduce((acc, resource) => {
+    const diff = compare(resource.image, image)
+    resource.diff = diff
+    resource.comparedTo = image
+    if (acc[diff]) {
+      acc[diff].push(resource)
+    } else {
+      acc.error.push(resource)
+    }
+    return acc
+  }, {upgrade: [], obsolete: [], equal: [], error: []})
 }
 
 function match (target, props, options = {}) {
@@ -487,33 +417,9 @@ function onAccountCreationFailed (account, err) {
   throw err
 }
 
-function onAccountCreated (k8s, resources) {
-  return createRole(k8s, resources)
-    .then(
-      onRoleCreated.bind(null, k8s, resources)
-    )
-}
-
 function onAccountDeletionFailed (account, err) {
   log.error(`Failed to create account '${account.metadata.namespace}.${account.metadata.name}' with error:\n\t${err.message}`)
   throw err
-}
-
-function onAccountDeleted (k8s, resources) {
-  return deleteRoleBinding(k8s, resources)
-    .then(
-      onRoleBindingDeleted.bind(null, k8s, resources)
-    )
-}
-
-function onConfigurationCreated (k8s, cluster) {
-  log.info('configuration maps created')
-  return createLevels(k8s, cluster)
-    .then(
-      () => log.info('cluster initialization complete'),
-      onResourcesFailed
-    )
-    .catch(exitOnError)
 }
 
 function onConfigurationCreationFailed (cluster, err) {
@@ -521,26 +427,9 @@ function onConfigurationCreationFailed (cluster, err) {
   throw err
 }
 
-function onConfigurationDeleted (k8s, cluster) {
-  log.info('configuration maps deleted')
-  return deleteLevels(k8s, cluster)
-    .then(
-      () => log.info('cluster deletion complete'),
-      onDeletionFailed
-    )
-    .catch(exitOnError)
-}
-
 function onConfigurationDeletionFailed (cluster, err) {
   log.error(`Failed to delete configuration maps with error:\n\t${err.message}`)
   throw err
-}
-
-function onContainerCreated (k8s, resources) {
-  return createContainerServices(k8s, resources)
-    .then(
-      onContainerServiceCreated.bind(null, k8s, resources)
-    )
 }
 
 function onContainerCreationFailed (spec, err) {
@@ -548,42 +437,14 @@ function onContainerCreationFailed (spec, err) {
   throw err
 }
 
-function onContainerDeleted (k8s, resources) {
-  return deleteContainerServices(k8s, resources)
-}
-
 function onContainerDeletionFailed (spec, err) {
   log.error(`Failed to delete container '${spec.metadata.namespace}.${spec.metadata.name}' with error:\n\t${err.message}`)
   throw err
 }
 
-function onContainerServiceCreated (k8s, resources) {
-  return createNetworkPolicy(k8s, resources)
-}
-
 function onDeletionFailed (err) {
-  log.error(`Failed to erase cluster resources with error:\n\t${err.message}`)
+  log.error(`Failed to erase cluster resources with error:\n\t${err.stack}`)
   throw err
-}
-
-function onNamespacesCreated (k8s, cluster) {
-  log.info('namespaces created')
-  return createConfiguration(k8s, cluster)
-    .then(
-      onConfigurationCreated.bind(null, k8s, cluster),
-      onConfigurationCreationFailed.bind(null, cluster)
-    )
-    .catch(exitOnError)
-}
-
-function onNamespacesDeleted (k8s, cluster) {
-  log.info('namespaces deleted')
-  return deleteConfiguration(k8s, cluster)
-    .then(
-      onConfigurationDeleted.bind(null, k8s, cluster),
-      onConfigurationDeletionFailed.bind(null, cluster)
-    )
-    .catch(exitOnError)
 }
 
 function onNamespaceCreationFailed (cluster, err) {
@@ -611,17 +472,6 @@ function onResourcesFailed (err) {
   throw err
 }
 
-function onRoleCreated (k8s, resources) {
-  return createRoleBinding(k8s, resources)
-}
-
-function onRoleDeleted (k8s, resources) {
-  return deleteContainer(k8s, resources)
-    .then(
-      onContainerDeleted.bind(null, k8s, resources)
-    )
-}
-
 function onRoleCreationFailed (role, err) {
   log.error(`Failed to create role '${role.metadata.namespace || 'Cluster'}.${role.metadata.name}' with error:\n\t${err.message}`)
   throw err
@@ -630,13 +480,6 @@ function onRoleCreationFailed (role, err) {
 function onRoleDeletionFailed (role, err) {
   log.error(`Failed to delete role '${role.metadata.namespace || 'Cluster'}.${role.metadata.name}' with error:\n\t${err.message}`)
   throw err
-}
-
-function onRoleBindingDeleted (k8s, resources) {
-  return deleteRole(k8s, resources)
-    .then(
-      onRoleDeleted.bind(null, k8s, resources)
-    )
 }
 
 function onRoleBindingCreationFailed (binding, err) {
@@ -659,93 +502,92 @@ function onServiceDeletionFailed (service, err) {
   throw err
 }
 
-function removeCluster (k8s, cluster) {
-  return deleteNamespaces(k8s, cluster)
-    .then(
-      onNamespacesDeleted.bind(null, k8s, cluster),
+async function removeCluster (k8s, cluster) {
+  await deleteNamespaces(k8s, cluster)
+    .catch(
       onNamespaceDeletionFailed.bind(null, cluster)
     )
+  log.info('namespaces deleted')
+
+  await deleteConfiguration(k8s, cluster)
+    .catch(
+      onConfigurationDeletionFailed.bind(null, cluster)
+    )
+    .catch(exitOnError)
+  log.info('configuration maps deleted')
+
+  await deleteLevels(k8s, cluster)
+    .catch(onDeletionFailed)
+    .catch(exitOnError)
+
+  log.info('cluster deletion complete')
 }
 
-function removeContainer (k8s, resources) {
+async function removeContainer (k8s, resources) {
   if (resources.daemonSet) {
     log.info(`    deleting daemonSet '${resources.daemonSet.metadata.name}'`)
-    return k8s.deleteDaemonSet(resources.daemonSet.metadata.namespace, resources.daemonSet.metadata.name)
+    await k8s.deleteDaemonSet(resources.daemonSet.metadata.namespace, resources.daemonSet.metadata.name)
   } else if (resources.deployment) {
     log.info(`    deleting deployment '${resources.deployment.metadata.name}'`)
-    return k8s.deleteDeployment(resources.deployment.metadata.namespace, resources.deployment.metadata.name)
+    await k8s.deleteDeployment(resources.deployment.metadata.namespace, resources.deployment.metadata.name)
   } else if (resources.statefulSet) {
     log.info(`    deleting statefulSet '${resources.statefulSet.metadata.name}'`)
-    return k8s.deleteStatefulSet(resources.statefulSet.metadata.namespace, resources.statefulSet.metadata.name)
+    await k8s.deleteStatefulSet(resources.statefulSet.metadata.namespace, resources.statefulSet.metadata.name)
   } else if (resources.cronJob) {
     log.info(`    deleting cronJob '${resources.cronJob.metadata.name}'`)
-    return k8s.deleteCronJob(resources.cronJob.metadata.namespace, resources.cronJob.metadata.name)
+    await k8s.deleteCronJob(resources.cronJob.metadata.namespace, resources.cronJob.metadata.name)
   } else if (resources.job) {
     log.info(`    deleting job '${resources.job.metadata.name}'`)
-    return k8s.deleteJob(resources.job.metadata.namespace, resources.job.metadata.name)
+    await k8s.deleteJob(resources.job.metadata.namespace, resources.job.metadata.name)
   }
 }
 
-function runJob (k8s, cluster, namespace, jobName) {
+async function runJob (k8s, cluster, namespace, jobName) {
   const fullName = `${jobName}.${namespace}`
   const jobSpec = cluster.services[fullName]
   if (!jobSpec) {
-    return Promise.reject(new Error(`no job '${jobName}' in namespace '${namespace}', please check the specification and spelling`))
+    throw new Error(`no job '${jobName}' in namespace '${namespace}', please check the specification and spelling`)
   }
   log.info(`creating job prerequisites: '${namespace}'`)
-  const steps = [
-    () => k8s.createNamespace(namespace),
-    () => k8s.fixNamespaceLabels(),
-    () => createConfiguration(k8s, cluster),
-    () => createAccount(k8s, jobSpec),
-    () => createNetworkPolicy(k8s, jobSpec)
-  ]
+  try {
+    await k8s.createNamespace(namespace)
+    await k8s.fixNamespaceLabels()
+    await createConfiguration(k8s, cluster)
+    await createAccount(k8s, jobSpec)
+    await createNetworkPolicy(k8s, jobSpec)
+  } catch (err) {
+    log.error(`failed to establish namespace '${namespace}' - cannot run job '${jobName}': ${err.stack}`)
+    throw new Error(`cannot run job '${jobName}' - could not establish '${namespace}: ${err.stack}'`)
+  }
 
-  return Promise.mapSeries(steps, s => s())
-    .then(
-      () => k8s.runJob(namespace, jobName, jobSpec.job)
-        .then(
-          null,
-          err => {
-            log.error(`failed to run job '${jobName}' in '${namespace}': ${err.stack}`)
-            throw err
-          }
-        ),
-      err => {
-        log.error(`failed to establish namespace '${namespace}' - cannot run job '${jobName}': ${err.stack}`)
-        throw new Error(`cannot run job '${jobName}' - could not establish '${namespace}: ${err.stack}'`)
-      }
-    )
+  await k8s.runJob(namespace, jobName, jobSpec.job)
+    .catch(err => {
+      log.error(`failed to run job '${jobName}' in '${namespace}': ${err.stack}`)
+      throw err
+    })
 }
 
-function upgradeResources (k8s, image, options) {
-  return getUpgradeCandidates(k8s, image, options)
-    .then(
-      set => {
-        const upgrades = set.upgrade.map(upgradeResource.bind(null, k8s))
-        return Promise
-          .all(upgrades)
-          .then(
-            () => set
-          )
-      },
-      err => {
-        log.error(`Upgrade process for '${image}' failed with error:\n\t${err.message}`)
-      }
-    )
+async function upgradeResources (k8s, image, options) {
+  const set = await getUpgradeCandidates(k8s, image, options)
+    .catch(err => {
+      log.error(`Upgrade process for '${image}' failed with error:\n\t${err.message}`)
+    })
+  const upgrades = set.upgrade.map(upgradeResource.bind(null, k8s))
+  await Promise.all(upgrades)
+  return set
 }
 
-function upgradeResource (k8s, metadata) {
+async function upgradeResource (k8s, metadata) {
   const namespace = metadata.namespace
   const name = metadata.service
   const container = metadata.container
   const image = metadata.comparedTo
   if (/daemonset/i.test(metadata.type)) {
-    return k8s.updateDaemonSet(namespace, name, image, container)
+    await k8s.updateDaemonSet(namespace, name, image, container)
   } else if (/deployment/i.test(metadata.type)) {
-    return k8s.upgradeDeployment(namespace, name, image, container)
+    await k8s.upgradeDeployment(namespace, name, image, container)
   } else if (/statefulset/i.test(metadata.type)) {
-    return k8s.upgradeStatefulSet(namespace, name, image, container)
+    await k8s.upgradeStatefulSet(namespace, name, image, container)
   }
 }
 

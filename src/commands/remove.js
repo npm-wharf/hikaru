@@ -56,7 +56,7 @@ function build (config, aliasCache) {
   }
 }
 
-function handle (config, hikaru, readFile, aliasCache, debugOut, argv) {
+async function handle (config, hikaru, readFile, aliasCache, debugOut, argv) {
   if (argv.ca) {
     config.ca = readFile(argv.ca)
   }
@@ -102,26 +102,21 @@ function handle (config, hikaru, readFile, aliasCache, debugOut, argv) {
     stream: debugOut
   })
 
-  hikaru.removeCluster(argv.source, options)
-    .then(
-      () => console.log('done'),
-      err => {
-        if (err.tokens) {
-          console.log(`${err.tokens.length} tokens were found in the specification. When prompted, please provide a value for each.`)
-          inquire.acquireTokens(err.tokens)
-            .then(
-              tokens => {
-                return hikaru.removeCluster(err.specPath, {
-                  data: tokens
-                })
-              }
-            )
-        } else {
-          console.error(`There was a problem in the specification at '${argv.source}'.\n ${err}`)
-          process.exit(100)
-        }
+  await hikaru.removeCluster(argv.source, options)
+    .catch(async err => {
+      if (!err.tokens) {
+        console.error(`There was a problem in the specification at '${argv.source}'.\n ${err.stack}`)
+        process.exit(100)
       }
-    )
+      console.log(`${err.tokens.length} tokens were found in the specification. When prompted, please provide a value for each.`)
+      const tokens = await inquire.acquireTokens(err.tokens)
+      return hikaru.removeCluster(err.specPath, Object.assign(
+        {},
+        options,
+        {data: tokens}
+      ))
+    })
+  console.log('done')
 }
 
 module.exports = function (config, hikaru, readFile, aliasCache, debugOut) {

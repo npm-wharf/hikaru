@@ -1,8 +1,8 @@
 const _ = require('lodash')
 const log = require('bole')('k8s')
-const Promise = require('bluebird')
 const diffs = require('./specDiff')
 const pluralize = require('pluralize')
+const retry = require('../retry')
 
 function base (client, manifest) {
   const namespace = manifest.metadata.namespace || 'default'
@@ -27,116 +27,79 @@ function multiple (client, manifest) {
   return base(client, manifest)[plural]
 }
 
-function checkManifest (client, manifest, outcome, resolve, limit, wait) {
-  let ms = wait || 500
-  let next = ms + (ms / 2)
-  if (limit === undefined) {
-    limit = 10000
-  } else {
-
-  }
+async function checkManifest (client, manifest, outcome) {
   const namespace = manifest.metadata.namespace || 'default'
   const name = manifest.metadata.name
-  log.debug(`checking service status '${namespace}.${name}' for '${outcome}'`)
 
-  setTimeout(() => {
-    single(client, manifest).get()
-      .then(
-        result => {
-          log.debug(`service '${namespace}.${name}' status - '${JSON.stringify(result, null, 2)}'`)
-          if (outcome === 'creation' && result.status) {
-            resolve(result)
-          } else if (outcome === 'update' && result.status) {
-            resolve(result)
-          } else if (limit <= 0) {
-            resolve(result)
-          } else {
-            checkManifest(client, manifest, outcome, resolve, limit - ms, next)
-          }
-        },
-        () => {
-          if (outcome === 'deletion') {
-            log.debug(`service '${namespace}.${name}' deleted successfully.`)
-            resolve()
-          } else {
-            log.debug(`checking service '${namespace}.${name}' status - resulted in API error. Checking again in ${next} ms.`)
-            checkManifest(client, manifest, outcome, resolve, limit - ms, next)
-          }
-        }
-      )
-  }, ms)
-}
-
-function createManifest (client, manifest) {
-  const namespace = manifest.metadata.namespace || 'default'
-  const name = manifest.metadata.name
-  let create = (resolve, reject) =>
-    multiple(client, manifest).create(manifest)
-    .then(
-      result => {
-        checkManifest(client, manifest, 'creation', resolve)
-      },
-      err => {
-        reject(new Error(`Manifest '${namespace}.${name}' failed to create:\n\t${err.message}`))
+  return retry(async () => {
+    log.debug(`checking service status '${namespace}.${name}' for '${outcome}'`)
+    try {
+      var result = await single(client, manifest).get()
+    } catch (err) {
+      if (outcome === 'deletion') {
+        log.debug(`service '${namespace}.${name}' deleted successfully.`)
+        return
+      } else {
+        log.debug(`checking service '${namespace}.${name}' status - resulted in API error. Checking again soon.`)
+        throw new Error('manifest not ready yet')
       }
-    )
-  return new Promise((resolve, reject) => {
-    single(client, manifest).get()
-      .then(
-        loaded => {
-          const diff = diffs.simple(loaded, manifest)
-          if (_.isEmpty(diff)) {
-            resolve()
-          } else {
-            if (diffs.canPatch(diff)) {
-              if (client.saveDiffs) {
-                diffs.save(loaded, manifest, diff)
-              }
-              updateManifest(client, manifest, diff)
-                .then(
-                  resolve,
-                  reject
-                )
-            } else if (diffs.canReplace(diff)) {
-              replaceManifest(client, manifest)
-                .then(
-                  resolve,
-                  reject
-                )
-            } else {
-              deleteManifest(client, manifest)
-                .then(
-                  create.bind(null, resolve, reject),
-                  reject
-                )
-            }
-          }
-        },
-        create.bind(null, resolve, reject)
-      )
+    }
+    log.debug(`service '${namespace}.${name}' status - '${JSON.stringify(result, null, 2)}'`)
+    if (outcome === 'creation' && result.status) {
+      return result
+    } else if (outcome === 'update' && result.status) {
+      return result
+    }
+    throw new Error('manifest not ready yet')
   })
 }
 
-function deleteManifest (client, manifest) {
+async function createManifest (client, manifest) {
   const namespace = manifest.metadata.namespace || 'default'
   const name = manifest.metadata.name
-  return new Promise((resolve, reject) => {
-    single(client, manifest).get()
-      .then(
-        () => {
-          single(client, manifest).delete()
-            .then(
-              result => {
-                checkManifest(client, manifest, 'deletion', resolve)
-              },
-              err => {
-                reject(new Error(`Manifest '${namespace}.${name}' could not be deleted:\n\t${err.message}`))
-              }
-            )
-        },
-        () => { resolve() }
-      )
-  })
+  let create = async () => {
+    await multiple(client, manifest).create(manifest)
+      .catch(err => {
+        throw new Error(`Manifest '${namespace}.${name}' failed to create:\n\t${err.message}`)
+      })
+    await checkManifest(client, manifest, 'creation')
+  }
+
+  try {
+    var loaded = await single(client, manifest).get()
+  } catch (err) {
+    await create()
+    return
+  }
+  const diff = diffs.simple(loaded, manifest)
+  if (!_.isEmpty(diff)) {
+    if (diffs.canPatch(diff)) {
+      if (client.saveDiffs) {
+        diffs.save(loaded, manifest, diff)
+      }
+      await updateManifest(client, manifest, diff)
+    } else if (diffs.canReplace(diff)) {
+      await replaceManifest(client, manifest)
+    } else {
+      await deleteManifest(client, manifest)
+    }
+  }
+}
+
+async function deleteManifest (client, manifest) {
+  const namespace = manifest.metadata.namespace || 'default'
+  const name = manifest.metadata.name
+  try {
+    await single(client, manifest).get()
+  } catch (err) {
+    return
+  }
+
+  await single(client, manifest).delete()
+    .catch(err => {
+      throw new Error(`Manifest '${namespace}.${name}' could not be deleted:\n\t${err.message}`)
+    })
+  await checkManifest(client, manifest, 'deletion')
 }
 
 function listManifests (client, apiVersion, kind) {
@@ -146,36 +109,24 @@ function listManifests (client, apiVersion, kind) {
   return multiple(client, manifest).list()
 }
 
-function replaceManifest (client, manifest) {
+async function replaceManifest (client, manifest) {
   const namespace = manifest.metadata.namespace || 'default'
   const name = manifest.metadata.name
-  return new Promise((resolve, reject) => {
-    single(client, manifest).update(manifest)
-      .then(
-        result => {
-          checkManifest(client, manifest, 'update', resolve)
-        },
-        err => {
-          reject(new Error(`Manifest '${namespace}.${name}' failed to replace:\n\t${err.message}`))
-        }
-      )
-  })
+  await single(client, manifest).update(manifest)
+    .catch(err => {
+      throw new Error(`Manifest '${namespace}.${name}' failed to replace:\n\t${err.message}`)
+    })
+  await checkManifest(client, manifest, 'update')
 }
 
-function updateManifest (client, manifest, diff) {
+async function updateManifest (client, manifest, diff) {
   const namespace = manifest.metadata.namespace || 'default'
   const name = manifest.metadata.name
-  return new Promise((resolve, reject) => {
-    single(client, manifest).patch(diff)
-      .then(
-        result => {
-          checkManifest(client, manifest, 'update', resolve)
-        },
-        err => {
-          reject(new Error(`Manifest '${namespace}.${name}' failed to update:\n\t${err.message}`))
-        }
-      )
-  })
+  await single(client, manifest).patch(diff)
+    .catch(err => {
+      throw new Error(`Manifest '${namespace}.${name}' failed to update:\n\t${err.message}`)
+    })
+  await checkManifest(client, manifest, 'update')
 }
 
 module.exports = function (client) {

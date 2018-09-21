@@ -1,5 +1,4 @@
 const _ = require('lodash')
-const Promise = require('bluebird')
 const core = require('./core')
 const diffs = require('./specDiff')
 
@@ -29,141 +28,96 @@ function multiple (client, namespace, name) {
   return base(client, namespace).networkpolicies
 }
 
-function createNetworkPolicy (client, deletes, networkPolicy) {
+async function createNetworkPolicy (client, deletes, networkPolicy) {
   const namespace = networkPolicy.metadata.namespace || 'default'
   const name = networkPolicy.metadata.name
 
-  let create = (resolve, reject) =>
-    multiple(client, namespace).create(networkPolicy)
-    .then(
-      () => resolve(),
-      err => {
-        reject(new Error(`NetworkPolicy '${namespace}.${name}' failed to create:\n\t${err.message}`))
+  let create = async () => {
+    await multiple(client, namespace).create(networkPolicy)
+      .catch(err => {
+        throw new Error(`NetworkPolicy '${namespace}.${name}' failed to create:\n\t${err.message}`)
+      })
+  }
+
+  try {
+    var loaded = await single(client, namespace, name).get()
+  } catch (err) {
+    return create()
+  }
+  const diff = diffs.simple(loaded, networkPolicy)
+  if (!_.isEmpty(diff)) {
+    if (diffs.canPatch(diff)) {
+      if (client.saveDiffs) {
+        diffs.save(loaded, networkPolicy, diff)
       }
-    )
-
-  return new Promise((resolve, reject) => {
-    single(client, namespace, name).get()
-      .then(
-        loaded => {
-          const diff = diffs.simple(loaded, networkPolicy)
-          if (_.isEmpty(diff)) {
-            resolve()
-          } else {
-            if (diffs.canPatch(diff)) {
-              if (client.saveDiffs) {
-                diffs.save(loaded, networkPolicy, diff)
-              }
-              patchNetworkPolicy(client, namespace, name, diff)
-                .then(
-                  resolve,
-                  reject
-                )
-            } else if (diffs.canReplace(diff)) {
-              replaceNetworkPolicy(client, namespace, name, networkPolicy)
-                .then(
-                  resolve,
-                  reject
-                )
-            } else {
-              deleteNetworkPolicy(client, namespace, name)
-                .then(
-                  create.bind(null, resolve, reject),
-                  reject
-                )
-            }
-          }
-        },
-        create.bind(null, resolve, reject)
-      )
-  })
+      await patchNetworkPolicy(client, namespace, name, diff)
+    } else if (diffs.canReplace(diff)) {
+      await replaceNetworkPolicy(client, namespace, name, networkPolicy)
+    } else {
+      await deleteNetworkPolicy(client, namespace, name)
+      await create()
+    }
+  }
 }
 
-function deleteNetworkPolicy (client, namespace, name) {
-  return new Promise((resolve, reject) => {
-    single(client, namespace, name).get()
-      .then(
-        () => {
-          single(client, namespace, name).delete()
-            .then(
-              () => resolve(),
-              err => {
-                reject(new Error(`NetworkPolicy '${namespace}.${name}' could not be deleted:\n\t${err.message}`))
-              }
-            )
-        },
-        () => {
-          resolve()
-        }
-      )
-  })
+async function deleteNetworkPolicy (client, namespace, name) {
+  try {
+    await single(client, namespace, name).get()
+  } catch (err) {
+    return
+  }
+  await single(client, namespace, name).delete()
+    .catch(err => {
+      throw new Error(`NetworkPolicy '${namespace}.${name}' could not be deleted:\n\t${err.message}`)
+    })
 }
 
-function getNetworkPoliciesByNamespace (client, namespace, baseImage) {
-  return listNetworkPolicies(client, namespace)
-      .then(
-        list => {
-          let networkPolicies = _.reduce(list.items, (acc, spec) => {
-            const containers = core.getContainersFromSpec(spec, baseImage)
-            containers.forEach(container => {
-              acc.push({
-                namespace: namespace,
-                type: 'NetworkPolicy',
-                service: spec.metadata.name,
-                image: container.image,
-                container: container.name,
-                metadata: spec.metadata,
-                labels: spec.template.metadata
-                  ? spec.template.metadata.labels
-                  : {}
-              })
-            })
-            return acc
-          }, [])
-          return { namespace, networkPolicies }
-        }
-      )
+async function getNetworkPoliciesByNamespace (client, namespace, baseImage) {
+  const list = await listNetworkPolicies(client, namespace)
+  let networkPolicies = _.reduce(list.items, (acc, spec) => {
+    const containers = core.getContainersFromSpec(spec, baseImage)
+    containers.forEach(container => {
+      acc.push({
+        namespace: namespace,
+        type: 'NetworkPolicy',
+        service: spec.metadata.name,
+        image: container.image,
+        container: container.name,
+        metadata: spec.metadata,
+        labels: spec.template.metadata
+          ? spec.template.metadata.labels
+          : {}
+      })
+    })
+    return acc
+  }, [])
+  return { namespace, networkPolicies }
 }
 
-function listNetworkPolicies (client, namespace) {
+async function listNetworkPolicies (client, namespace) {
   return multiple(client, namespace).list()
 }
 
-function patchNetworkPolicy (client, namespace, name, diff) {
-  return new Promise((resolve, reject) => {
-    single(client, namespace, name).patch(diff)
-      .then(
-        () => resolve(),
-        err => {
-          reject(new Error(`NetworkPolicy '${namespace}.${name}' failed to patch:\n\t${err.message}`))
-        }
-      )
-  })
+async function patchNetworkPolicy (client, namespace, name, diff) {
+  await single(client, namespace, name).patch(diff)
+    .catch(err => {
+      throw new Error(`NetworkPolicy '${namespace}.${name}' failed to patch:\n\t${err.message}`)
+    })
 }
 
-function replaceNetworkPolicy (client, namespace, name, spec) {
-  return new Promise((resolve, reject) => {
-    single(client, namespace, name).update(spec)
-      .then(
-        () => resolve(),
-        err => {
-          reject(new Error(`NetworkPolicy '${namespace}.${name}' failed to replace:\n\t${err.message}`))
-        }
-      )
-  })
+async function replaceNetworkPolicy (client, namespace, name, spec) {
+  await single(client, namespace, name).update(spec)
+    .catch(err => {
+      throw new Error(`NetworkPolicy '${namespace}.${name}' failed to replace:\n\t${err.message}`)
+    })
 }
 
-function updateNetworkPolicy (client, namespace, name, image, container) {
+async function updateNetworkPolicy (client, namespace, name, image, container) {
   const patch = diffs.getImagePatch(container || name, image)
-  return new Promise((resolve, reject) => {
-    single(client, namespace, name).patch(patch)
-      .then(
-        () => resolve(),
-        err => {
-          reject(new Error(`NetworkPolicy '${namespace}.${name}' failed to upgrade:\n\t${err.message}`))
-        }
-      )
-  })
+  await single(client, namespace, name).patch(patch)
+    .catch(err => {
+      throw new Error(`NetworkPolicy '${namespace}.${name}' failed to upgrade:\n\t${err.message}`)
+    })
 }
 
 module.exports = function (client, deletes) {

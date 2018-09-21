@@ -1,30 +1,23 @@
 const _ = require('lodash')
 const Promise = require('bluebird')
 
-function getLoadBalancers (ns, svc, namespace) {
+async function getLoadBalancers (ns, svc, namespace) {
   if (namespace) {
-    return svc.list(namespace)
-      .then(
-        services => {
-          return services.items.reduce((list, service) => {
-            const loadBalancer = service.status.loadBalancer || {}
-            if (loadBalancer.ingress && loadBalancer.ingress.length) {
-              list.push(service)
-            }
-            return list
-          }, [])
-        }
-      )
+    const services = await svc.list(namespace)
+    return services.items.reduce((list, service) => {
+      const loadBalancer = service.status.loadBalancer || {}
+      if (loadBalancer.ingress && loadBalancer.ingress.length) {
+        list.push(service)
+      }
+      return list
+    }, [])
   } else {
-    return ns.list()
-      .then(
-        list => Promise.map(
-            list,
-            getLoadBalancers.bind(null, ns, svc)
-          )
-      ).then(
-        lists => _.flatten(lists)
-      )
+    const list = await ns.list()
+    const lists = await Promise.map(
+      list,
+      getLoadBalancers.bind(null, ns, svc)
+    )
+    return _.flatten(lists)
   }
 }
 

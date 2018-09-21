@@ -1,7 +1,7 @@
 const _ = require('lodash')
 const log = require('bole')('k8s')
-const Promise = require('bluebird')
 const diffs = require('./specDiff')
+const retry = require('../retry')
 
 function base (client, namespace) {
   return client
@@ -16,139 +16,97 @@ function multiple (client, namespace, name) {
   return base(client, namespace).services
 }
 
-function checkService (client, namespace, name, outcome, resolve, wait) {
-  let ms = wait || 500
-  let next = ms + (ms / 2)
-  if (next > 5000) {
-    next = 5000
-  }
-  log.debug(`checking service status '${namespace}.${name}' for '${outcome}'`)
-  setTimeout(() => {
-    single(client, namespace, name).get()
-      .then(
-        result => {
-          log.debug(`service '${namespace}.${name}' status - '${JSON.stringify(result.status, null, 2)}'`)
-          if (outcome === 'creation' && result.status.loadBalancer) {
-            resolve(result)
-          } else if (outcome === 'update' && result.status.loadBalancer) {
-            resolve(result)
-          } else {
-            checkService(client, namespace, name, outcome, resolve, next)
-          }
-        },
-        () => {
-          if (outcome === 'deletion') {
-            log.debug(`service '${namespace}.${name}' deleted successfully.`)
-            resolve()
-          } else {
-            log.debug(`checking service '${namespace}.${name}' status - resulted in API error. Checking again in ${next} ms.`)
-            checkService(client, namespace, name, outcome, resolve, next)
-          }
-        }
-      )
-  }, ms)
+async function checkService (client, namespace, name, outcome) {
+  await retry(async () => {
+    log.debug(`checking service status '${namespace}.${name}' for '${outcome}'`)
+    try {
+      var result = await single(client, namespace, name).get()
+    } catch (err) {
+      if (outcome === 'deletion') {
+        log.debug(`service '${namespace}.${name}' deleted successfully.`)
+        return
+      } else {
+        log.debug(`checking service '${namespace}.${name}' status - resulted in API error. Checking again soon.`)
+        throw new Error('service not ready yet')
+      }
+    }
+
+    log.debug(`service '${namespace}.${name}' status - '${JSON.stringify(result.status, null, 2)}'`)
+    if (outcome === 'creation' && result.status.loadBalancer) {
+      return result
+    } else if (outcome === 'update' && result.status.loadBalancer) {
+      return result
+    }
+    throw new Error('service not ready yet')
+  })
 }
 
-function createService (client, deletes, service) {
+async function createService (client, deletes, service) {
   const namespace = service.metadata.namespace || 'default'
   const name = service.metadata.name
-  let create = (resolve, reject) =>
-    multiple(client, namespace).create(service)
-    .then(
-      result => {
-        checkService(client, namespace, name, 'creation', resolve)
-      },
-      err => {
-        reject(new Error(`Service '${namespace}.${name}' failed to create:\n\t${err.message}`))
+  let create = async () => {
+    await multiple(client, namespace).create(service)
+      .catch(err => {
+        throw new Error(`Service '${namespace}.${name}' failed to create:\n\t${err.message}`)
+      })
+
+    await checkService(client, namespace, name, 'creation')
+  }
+
+  try {
+    var loaded = await single(client, namespace, name).get()
+  } catch (e) {
+    return create()
+  }
+  const diff = diffs.simple(loaded, service)
+  if (!_.isEmpty(diff)) {
+    if (diffs.canPatch(diff)) {
+      if (client.saveDiffs) {
+        diffs.save(loaded, service, diff)
       }
-    )
-  return new Promise((resolve, reject) => {
-    single(client, namespace, name).get()
-      .then(
-        loaded => {
-          const diff = diffs.simple(loaded, service)
-          if (_.isEmpty(diff)) {
-            resolve()
-          } else {
-            if (diffs.canPatch(diff)) {
-              if (client.saveDiffs) {
-                diffs.save(loaded, service, diff)
-              }
-              updateService(client, namespace, name, diff)
-                .then(
-                  resolve,
-                  reject
-                )
-            } else if (diffs.canReplace(diff)) {
-              replaceService(client, namespace, name, service)
-                .then(
-                  resolve,
-                  reject
-                )
-            } else {
-              deleteService(client, namespace, name)
-                .then(
-                  create.bind(null, resolve, reject),
-                  reject
-                )
-            }
-          }
-        },
-        create.bind(null, resolve, reject)
-      )
-  })
+      await updateService(client, namespace, name, diff)
+    } else if (diffs.canReplace(diff)) {
+      await replaceService(client, namespace, name, service)
+    } else {
+      await deleteService(client, namespace, name)
+      await create()
+    }
+  }
 }
 
-function deleteService (client, namespace, name) {
-  return new Promise((resolve, reject) => {
-    single(client, namespace, name).get()
-      .then(
-        () => {
-          single(client, namespace, name).delete()
-            .then(
-              result => {
-                checkService(client, namespace, name, 'deletion', resolve)
-              },
-              err => {
-                reject(new Error(`Service '${namespace}.${name}' could not be deleted:\n\t${err.message}`))
-              }
-            )
-        },
-        () => { resolve() }
-      )
-  })
+async function deleteService (client, namespace, name) {
+  try {
+    await single(client, namespace, name).get()
+  } catch (e) {
+    return
+  }
+  await single(client, namespace, name).delete()
+    .catch(err => {
+      throw new Error(`Service '${namespace}.${name}' could not be deleted:\n\t${err.message}`)
+    })
+  await checkService(client, namespace, name, 'deletion')
 }
 
 function listServices (client, namespace) {
   return multiple(client, namespace).list()
 }
 
-function replaceService (client, namespace, name, spec) {
-  return new Promise((resolve, reject) => {
-    single(client, namespace, name).update(spec)
-      .then(
-        result => {
-          checkService(client, namespace, name, 'update', resolve)
-        },
-        err => {
-          reject(new Error(`Service '${namespace}.${name}' failed to replace:\n\t${err.message}`))
-        }
-      )
-  })
+async function replaceService (client, namespace, name, spec) {
+  await single(client, namespace, name).update(spec)
+    .catch(err => {
+      throw new Error(`Service '${namespace}.${name}' failed to replace:\n\t${err.message}`)
+    })
+
+  await checkService(client, namespace, name, 'update')
 }
 
-function updateService (client, namespace, name, diff) {
-  return new Promise((resolve, reject) => {
-    single(client, namespace, name).patch(diff)
-      .then(
-        result => {
-          checkService(client, namespace, name, 'update', resolve)
-        },
-        err => {
-          reject(new Error(`Service '${namespace}.${name}' failed to update:\n\t${err.message}`))
-        }
-      )
-  })
+async function updateService (client, namespace, name, diff) {
+  await single(client, namespace, name).patch(diff)
+    .catch(err => {
+      throw new Error(`Service '${namespace}.${name}' failed to update:\n\t${err.message}`)
+    })
+
+  await checkService(client, namespace, name, 'update')
 }
 
 module.exports = function (client, deletes) {

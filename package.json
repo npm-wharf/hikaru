@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@npm-wharf/mcgonagall": "1.9.x",
+    "async-retry": "^1.2.1",
     "auto-kubernetes-client": "^0.5.1",
     "bluebird": "^3.5.1",
     "bole": "^3.0.2",
@@ -42,10 +43,11 @@
     "standard-version": "^4.2.0"
   },
   "scripts": {
+    "lint": "standard --fix",
     "pretest": "standard",
-    "test": "node_modules/mocha/bin/mocha spec/**/*.spec.js",
+    "test": "mocha spec/**/*.spec.js",
     "coverage": "nyc npm test",
-    "continuous": "./node_modules/mocha/bin/mocha spec/*.spec.js -w",
+    "continuous": "mocha spec/*.spec.js -w",
     "release": "standard-version",
     "standard": "standard --fix"
   },
