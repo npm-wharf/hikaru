@@ -32,7 +32,7 @@ function multiple (client, namespace, name) {
 }
 
 async function checkDeployment (client, namespace, name, outcome) {
-  retry(async () => {
+  await retry(async () => {
     log.debug(`checking deployment status '${namespace}.${name}' for '${outcome}'`)
     try {
       var result = await single(client, namespace, name).get()
