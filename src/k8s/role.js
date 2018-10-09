@@ -4,7 +4,11 @@ const join = Promise.join
 const GROUPS = {
   '1.6': 'rbac.authorization.k8s.io/v1beta1',
   '1.7': 'rbac.authorization.k8s.io/v1beta1',
-  '1.8': 'rbac.authorization.k8s.io/v1'
+  '1.8': 'rbac.authorization.k8s.io/v1',
+  '1.9': 'rbac.authorization.k8s.io/v1',
+  '1.10': 'rbac.authorization.k8s.io/v1',
+  '1.11': 'rbac.authorization.k8s.io/v1',
+  '1.12': 'rbac.authorization.k8s.io/v1'
 }
 
 function group (client) {

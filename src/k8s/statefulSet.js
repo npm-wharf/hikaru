@@ -10,7 +10,11 @@ const GROUPS = {
   '1.5': 'apps/v1beta1',
   '1.6': 'apps/v1beta1',
   '1.7': 'apps/v1beta1',
-  '1.8': 'apps/v1beta2'
+  '1.8': 'apps/v1beta2',
+  '1.9': 'apps/v1',
+  '1.10': 'apps/v1',
+  '1.11': 'apps/v1',
+  '1.12': 'apps/v1'
 }
 
 function group (client) {

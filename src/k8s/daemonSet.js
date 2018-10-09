@@ -10,7 +10,11 @@ const GROUPS = {
   '1.5': 'extensions/v1beta1',
   '1.6': 'extensions/v1beta1',
   '1.7': 'extensions/v1beta1',
-  '1.8': 'apps/v1beta2'
+  '1.8': 'apps/v1beta2',
+  '1.9': 'apps/v1',
+  '1.10': 'apps/v1',
+  '1.11': 'apps/v1',
+  '1.12': 'apps/v1'
 }
 
 function group (client) {
@@ -32,7 +36,7 @@ function multiple (client, namespace, name) {
 }
 
 async function checkDaemonSet (client, namespace, name, outcome) {
-  return retry(async bail => {
+  return retry(async () => {
     log.debug(`checking daemonSet status '${namespace}.${name}' for '${outcome}'`)
     try {
       var result = await single(client, namespace, name).get()
@@ -42,17 +46,16 @@ async function checkDaemonSet (client, namespace, name, outcome) {
         return
       } else {
         log.debug(`daemonSet '${namespace}.${name}' status check got API error. Checking again soon.`)
-        bail(new Error('daemon set not ready yet'))
+        throw new Error('daemon set not ready yet')
       }
     }
-
     log.debug(`daemonSet '${namespace}.${name}' status - '${JSON.stringify(result.status, null, 2)}'`)
     if ((outcome === 'creation' || outcome === 'update') && result.status.numberReady === result.status.desiredNumberScheduled) {
       return result
     } else if (outcome === 'deletion' && result.status.phase !== 'Terminating') {
       return result
     }
-    bail(new Error('daemon set not ready yet'))
+    throw new Error('daemon set not ready yet')
   })
 }
 

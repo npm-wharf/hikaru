@@ -5,8 +5,8 @@ const retry = require('../retry')
 
 function base (client, namespace) {
   return client
-      .group('batch')
-      .ns(namespace)
+    .group('batch')
+    .ns(namespace)
 }
 
 function single (client, namespace, name) {

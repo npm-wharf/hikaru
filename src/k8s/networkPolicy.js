@@ -7,7 +7,11 @@ const GROUPS = {
   '1.5': 'networking.k8s.io/v1',
   '1.6': 'networking.k8s.io/v1',
   '1.7': 'networking.k8s.io/v1',
-  '1.8': 'networking.k8s.io/v1'
+  '1.8': 'networking.k8s.io/v1',
+  '1.9': 'networking.k8s.io/v1',
+  '1.10': 'networking.k8s.io/v1',
+  '1.11': 'networking.k8s.io/v1',
+  '1.12': 'networking.k8s.io/v1'
 }
 
 function group (client) {

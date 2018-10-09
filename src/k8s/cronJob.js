@@ -5,7 +5,11 @@ const retry = require('../retry')
 
 const GROUPS = {
   '1.7': 'batch/v2alpha1',
-  '1.8': 'batch/v1beta1'
+  '1.8': 'batch/v1beta1',
+  '1.9': 'batch/v1beta1',
+  '1.10': 'batch/v1beta1',
+  '1.11': 'batch/v1beta1',
+  '1.12': 'batch/v1beta1'
 }
 
 function group (client) {

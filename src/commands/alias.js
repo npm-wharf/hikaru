@@ -11,6 +11,7 @@ function build (config) {
     apiVersion: {
       alias: 'v',
       describe: 'kubernetes cluster API version',
+      type: 'string',
       default: '1.7'
     },
     user: {

@@ -34,6 +34,7 @@ module.exports = function (client) {
   const networkPolicy = require('./networkPolicy')(client, deletes)
   const role = require('./role')(client)
   const roleBinding = require('./roleBinding')(client)
+  const secret = require('./secret')(client, deletes)
   const service = require('./service')(client, deletes)
   const statefulSet = require('./statefulSet')(client, deletes)
 
@@ -44,6 +45,7 @@ module.exports = function (client) {
   deletes.networkPolicy = networkPolicy.delete
   deletes.role = role.delete
   deletes.roleBinding = roleBinding.delete
+  deletes.secret = secret.delete
   deletes.service = service.delete
   deletes.serviceAccount = account.delete
   deletes.statefulSet = statefulSet.delete
@@ -112,6 +114,12 @@ module.exports = function (client) {
     createRoleBinding: roleBinding.create,
     deleteRoleBinding: roleBinding.delete,
     listRoleBindings: roleBinding.list,
+
+    createSecret: secret.create,
+    deleteSecret: secret.delete,
+    listSecret: secret.list,
+    pathSecret: secret.patch,
+    updateSecret: secret.update,
 
     createService: service.create,
     deleteService: service.delete,

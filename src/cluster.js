@@ -67,7 +67,7 @@ async function createContainerServices (k8s, resources) {
 async function createLevels (k8s, cluster) {
   await Promise.each(cluster.levels, (level) => {
     log.info(`creating level: ${level}`)
-    return createServicesInLevel(k8s, level, cluster)
+    return createResourcesInLevel(k8s, level, cluster)
   })
 }
 
@@ -110,11 +110,19 @@ async function createRoleBinding (k8s, resources) {
   }
 }
 
-async function createServicesInLevel (k8s, level, cluster) {
+async function createResourcesInLevel (k8s, level, cluster) {
   const promises = cluster.order[level].reduce((acc, serviceName) => {
     log.info(`  creating resources for '${serviceName}'`)
-    return acc.concat(createServiceResources(k8s, cluster.services[serviceName]))
+    return acc.concat(createServiceResources(k8s, cluster.resources[serviceName]))
   }, [])
+  await Promise.all(promises)
+}
+
+async function createSecrets (k8s, cluster) {
+  const promises = cluster.secrets.map(secret => {
+    log.info(`    creating secret '${secret.metadata.namespace}.${secret.metadata.name}'`)
+    return k8s.createSecret(secret)
+  })
   await Promise.all(promises)
 }
 
@@ -168,7 +176,7 @@ async function deleteLevels (k8s, cluster) {
   cluster.levels.reverse()
   await Promise.each(cluster.levels, (level) => {
     log.info(`deleting level: ${level}`)
-    return deleteServicesInLevel(k8s, level, cluster)
+    return deleteResourcesInLevel(k8s, level, cluster)
   })
 }
 
@@ -211,12 +219,12 @@ async function deleteRoleBinding (k8s, resources) {
   }
 }
 
-async function deleteServicesInLevel (k8s, level, cluster) {
-  const promises = cluster.order[level].reduce((acc, serviceName) => {
-    const reserved = _.includes(RESERVED_NAMESPACES, cluster.services[serviceName].namespace)
+async function deleteResourcesInLevel (k8s, level, cluster) {
+  const promises = cluster.order[level].reduce((acc, resourceName) => {
+    const reserved = _.includes(RESERVED_NAMESPACES, cluster.resources[resourceName].namespace)
     if (reserved) {
-      log.info(`  deleting resources for '${serviceName}'`)
-      return acc.concat(deleteServiceResources(k8s, cluster.services[serviceName]))
+      log.info(`  deleting resources for '${resourceName}'`)
+      return acc.concat(deleteResourceWorkloads(k8s, cluster.resources[resourceName]))
     } else {
       return acc
     }
@@ -224,12 +232,22 @@ async function deleteServicesInLevel (k8s, level, cluster) {
   await Promise.all(promises)
 }
 
-async function deleteServiceResources (k8s, resources) {
+async function deleteResourceWorkloads (k8s, resources) {
   await deleteAccount(k8s, resources)
   await deleteRoleBinding(k8s, resources)
   await deleteRole(k8s, resources)
   await deleteContainer(k8s, resources)
   await deleteContainerServices(k8s, resources)
+}
+
+async function deleteSecrets (k8s, cluster) {
+  const promises = cluster.secrets.map(async secret => {
+    if (_.includes(RESERVED_NAMESPACES, secret.metadata.namespace)) {
+      log.info(`deleting secret: '${secret.metadata.namespace}.${secret.metadata.name}'`)
+      await k8s.deleteSecret(secret)
+    }
+  })
+  await Promise.all(promises)
 }
 
 async function deployCluster (k8s, cluster) {
@@ -243,6 +261,11 @@ async function deployCluster (k8s, cluster) {
     .catch(onConfigurationCreationFailed.bind(null, cluster))
     .catch(exitOnError)
   log.info('configuration maps created')
+
+  await createSecrets(k8s, cluster)
+    .catch(onSecretCreationFailed.bind(null, cluster))
+    .catch(exitOnError)
+  log.info('secrets created successfully')
 
   await createLevels(k8s, cluster)
     .catch(onResourcesFailed)
@@ -492,8 +515,18 @@ function onRoleBindingDeletionFailed (binding, err) {
   throw err
 }
 
+function onSecretCreationFailed (cluster, err) {
+  log.error(`Failed to create secrets with error:\n\t${err.message}`)
+  throw err
+}
+
 function onServiceCreationFailed (service, err) {
   log.error(`Failed to create service '${service.metadata.namespace}.${service.metadata.name}' with error:\n\t${err.message}`)
+  throw err
+}
+
+function onSecretDeletionFailed (cluster, err) {
+  log.error(`Failed to delete secrets with error:\n\t${err.message}`)
   throw err
 }
 
@@ -508,6 +541,13 @@ async function removeCluster (k8s, cluster) {
       onNamespaceDeletionFailed.bind(null, cluster)
     )
   log.info('namespaces deleted')
+
+  await deleteSecrets(k8s, cluster)
+    .catch(
+      onSecretDeletionFailed.bind(null, cluster)
+    )
+    .catch(exitOnError)
+  log.info('secrets deleted')
 
   await deleteConfiguration(k8s, cluster)
     .catch(
@@ -544,7 +584,7 @@ async function removeContainer (k8s, resources) {
 
 async function runJob (k8s, cluster, namespace, jobName) {
   const fullName = `${jobName}.${namespace}`
-  const jobSpec = cluster.services[fullName]
+  const jobSpec = cluster.resources[fullName]
   if (!jobSpec) {
     throw new Error(`no job '${jobName}' in namespace '${namespace}', please check the specification and spelling`)
   }
@@ -602,7 +642,8 @@ module.exports = function (k8s) {
     createNamespaces: createNamespaces.bind(null, k8s),
     createNetworkPolicy: createNetworkPolicy.bind(null, k8s),
     createRoleBinding: createRoleBinding.bind(null, k8s),
-    createServicesInLevel: createServicesInLevel.bind(null, k8s),
+    createResourcesInLevel: createResourcesInLevel.bind(null, k8s),
+    createSecrets: createSecrets.bind(null, k8s),
     createServiceResources: createServiceResources.bind(null, k8s),
     deleteAccount: deleteAccount.bind(null, k8s),
     deleteConfiguration: deleteConfiguration.bind(null, k8s),
@@ -612,8 +653,9 @@ module.exports = function (k8s) {
     deleteNamespaces: deleteNamespaces.bind(null, k8s),
     deleteNetworkPolicy: deleteNetworkPolicy.bind(null, k8s),
     deleteRoleBinding: deleteRoleBinding.bind(null, k8s),
-    deleteServicesInLevel: deleteServicesInLevel.bind(null, k8s),
-    deleteServiceResources: deleteServiceResources.bind(null, k8s),
+    deleteResourcesInLevel: deleteResourcesInLevel.bind(null, k8s),
+    deleteResourceWorkloads: deleteResourceWorkloads.bind(null, k8s),
+    deleteSecrets: deleteSecrets.bind(null, k8s),
     deployCluster: deployCluster.bind(null, k8s),
     findResourcesByImage: findResourcesByImage.bind(null, k8s),
     findResourcesByMetadata: findResourcesByMetadata.bind(null, k8s),
