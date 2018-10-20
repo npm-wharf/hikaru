@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.12.0"></a>
+# [1.12.0](https://github.com/npm-wharf/hikaru/compare/v1.10.0...v1.12.0) (2018-10-20)
+
+
+### Bug Fixes
+
+* typo, missing await ([d1d48d7](https://github.com/npm-wharf/hikaru/commit/d1d48d7))
+
+
+### Features
+
+* switch to async/await ([#6](https://github.com/npm-wharf/hikaru/issues/6)) ([98bd229](https://github.com/npm-wharf/hikaru/commit/98bd229))
+
+
+
 <a name="1.11.0"></a>
 # [1.11.0](https://github.com/npm-wharf/hikaru/compare/v1.10.0...v1.11.0) (2018-09-27)
 
