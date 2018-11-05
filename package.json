@@ -7,7 +7,7 @@
     "hikaru": "./bin/hikaru.js"
   },
   "dependencies": {
-    "@npm-wharf/mcgonagall": "1.10.x",
+    "@npm-wharf/mcgonagall": "^1.10.3",
     "async-retry": "^1.2.1",
     "auto-kubernetes-client": "^0.5.1",
     "bluebird": "^3.5.1",
