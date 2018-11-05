@@ -1,6 +1,6 @@
 {
   "name": "@npm-wharf/hikaru",
-  "version": "1.12.1",
+  "version": "1.12.2",
   "description": "A continuous deployment service and integration helper for kubernetes",
   "main": "src/index.js",
   "bin": {

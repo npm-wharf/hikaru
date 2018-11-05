@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.12.2"></a>
+## [1.12.2](https://github.com/npm-wharf/hikaru/compare/v1.12.1...v1.12.2) (2018-11-05)
+
+
+### Bug Fixes
+
+* update mcgonagall to pull in additional bug fix for multi-level tokens ([5a498b7](https://github.com/npm-wharf/hikaru/commit/5a498b7))
+
+
+
 <a name="1.12.1"></a>
 ## [1.12.1](https://github.com/npm-wharf/hikaru/compare/v1.12.0...v1.12.1) (2018-11-05)
 
