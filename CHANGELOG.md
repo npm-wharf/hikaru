@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.13.0"></a>
+# [1.13.0](https://github.com/npm-wharf/hikaru/compare/v1.12.3...v1.13.0) (2019-01-05)
+
+
+### Features
+
+* introduce Kubernetes API version detection when authenticating with username and password ([d8e9760](https://github.com/npm-wharf/hikaru/commit/d8e9760))
+
+
+
 <a name="1.12.3"></a>
 ## [1.12.3](https://github.com/npm-wharf/hikaru/compare/v1.12.2...v1.12.3) (2018-11-05)
 
