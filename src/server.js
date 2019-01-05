@@ -6,6 +6,7 @@ const express = require('./express')()
 const service = require('./service')
 const bole = require('bole')
 const log = bole('hikaru')
+const version = require('./version')
 
 config.http = {
   apiPrefix: '/api',
@@ -21,10 +22,24 @@ const dependencies = {
   log
 }
 
-fount({
-  default: dependencies,
-  resources: dependencies,
-  stack: dependencies
-})
-
-fount.inject(service.start)
+if (config.username && config.password) {
+  version.getVersion(config)
+    .then(
+      v => {
+        config.version = v
+        fount({
+          default: dependencies,
+          resources: dependencies,
+          stack: dependencies
+        })
+        fount.inject(service.start)
+      }
+    )
+} else {
+  fount({
+    default: dependencies,
+    resources: dependencies,
+    stack: dependencies
+  })
+  fount.inject(service.start)
+}

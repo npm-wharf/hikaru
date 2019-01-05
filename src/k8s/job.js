@@ -35,7 +35,7 @@ async function checkJob (client, namespace, name, outcome) {
     try {
       log.debug(`job '${namespace}.${name}' status - '${JSON.stringify(result.status, null, 2)}'`)
       const status = result.status.conditions && result.status.conditions.length
-                        ? result.status.conditions[0] : {}
+        ? result.status.conditions[0] : {}
       if (outcome === 'completion') {
         if (status.type === 'Complete' && status.status === 'True') {
           return result

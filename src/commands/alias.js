@@ -1,4 +1,5 @@
 const bole = require('bole')
+const version = require('../version')
 
 function build (config) {
   return {
@@ -11,8 +12,7 @@ function build (config) {
     apiVersion: {
       alias: 'v',
       describe: 'kubernetes cluster API version',
-      type: 'string',
-      default: '1.7'
+      type: 'string'
     },
     user: {
       alias: 'u',
@@ -43,7 +43,7 @@ function build (config) {
   }
 }
 
-function handle (config, hikaru, readFile, aliasCache, debugOut, argv) {
+async function handle (config, hikaru, readFile, aliasCache, debugOut, argv) {
   config.alias = argv.name
   if (argv.ca) {
     config.ca = readFile(argv.ca)
@@ -71,10 +71,11 @@ function handle (config, hikaru, readFile, aliasCache, debugOut, argv) {
   }
 
   bole.output({
-    level: argv.verbose ? 'debug' : 'info',
+    level: 'info',
     stream: debugOut
   })
 
+  config.version = await version.getVersion(config)
   hikaru.aliasCluster(aliasCache, config)
     .then(
       () => console.log(`Alias '${config.alias}' for '${config.url}' was written to '${aliasCache.cacheFile}' successfully.`),

@@ -123,9 +123,9 @@ function getImagePatch (name, image) {
 
 function isBackoffOnly (diff, job) {
   const backoff = (((job.spec || {})
-                    .template || {})
-                    .spec || {})
-                    .backoffLimit
+    .template || {})
+    .spec || {})
+    .backoffLimit
   const template = {
     spec: {
       template: {
@@ -140,9 +140,9 @@ function isBackoffOnly (diff, job) {
 
 function hasContainerPort (diff) {
   const containers = (((diff.spec || {})
-                      .template || {})
-                      .spec || {})
-                      .containers || []
+    .template || {})
+    .spec || {})
+    .containers || []
   return _.find(containers, c => {
     return _.find(c.ports || [], p => {
       return p.containerPort || p.name
@@ -152,7 +152,7 @@ function hasContainerPort (diff) {
 
 function hasServicePort (diff) {
   const ports = (diff.spec || {})
-                      .ports || []
+    .ports || []
   return ports.length
 }
 

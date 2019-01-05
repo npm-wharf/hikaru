@@ -48,7 +48,7 @@ async function checkCronJob (client, namespace, name, outcome) {
     try {
       log.debug(`cron job '${namespace}.${name}' status - '${JSON.stringify(result.status, null, 2)}'`)
       const status = result.status.conditions && result.status.conditions.length
-                        ? result.status.conditions[0] : {}
+        ? result.status.conditions[0] : {}
       if (outcome === 'completion') {
         if (result.status === undefined || Object.keys(result.status).length === 0) {
           log.info(`cron job appears to have created successfully but did not run (according to schedule)`)

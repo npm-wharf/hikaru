@@ -1,4 +1,4 @@
-const K8sClient = require('auto-kubernetes-client')
+const K8sClient = require('@npm-wharf/auto-kubernetes-client')
 const log = require('bole')('connection')
 
 async function getClient (config) {

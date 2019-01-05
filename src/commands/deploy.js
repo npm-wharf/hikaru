@@ -1,5 +1,6 @@
 const bole = require('bole')
 const inquire = require('./inquire')
+const version = require('../version')
 
 function build (config, aliasCache) {
   return {
@@ -16,8 +17,7 @@ function build (config, aliasCache) {
     },
     apiVersion: {
       alias: 'v',
-      describe: 'kubernetes cluster API version',
-      default: '1.7'
+      describe: 'kubernetes cluster API version'
     },
     user: {
       alias: 'u',
@@ -119,6 +119,7 @@ async function handle (config, hikaru, readFile, aliasCache, debugOut, argv) {
     stream: debugOut
   })
 
+  config.version = await version.getVersion(config)
   await hikaru.deployCluster(argv.source, options)
     .catch(async err => {
       if (!err.tokens) {

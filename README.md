@@ -543,7 +543,7 @@ hikaru findByImage {image} \
 
 ## Aliasing Clusters and Caching Credentials
 
-*If* you are comfortable storing cluster credentials in your home directory, you can use hikaru's `login` command to alias a kubernetes cluster endpoint and the auth information under an alias. This will allow you to use the alias argument (`--alias` or `-a`) so that you won't have to provide the url, auth or even version argument to each of the other commands
+*If* you are comfortable storing cluster credentials in your home directory, you can use hikaru's `login` command to alias a kubernetes cluster endpoint and the auth information under an alias. This will allow you to use the alias argument (`--alias` or `-a`) so that you won't have to provide the url, or the auth argument to each of the other commands
 
 ```shell
 hikaru alias \
@@ -553,8 +553,7 @@ hikaru alias \
   --token {token} \
   --ca {path to cluster CA} \
   --cert {path to client cert} \
-  --key {path to client key} \
-  --version {api version for the cluster}
+  --key {path to client key}
 ```
 
 # Library
@@ -591,7 +590,8 @@ hikaru.deployCluster(
   {
     branch: 'special', // 'master' is default
     // kubernetes API/cluster version
-    version: '1.8', // '1.7' is default
+    // this can be auto-detected if authenticating via user-password
+    version: '1.8', // '1.10' is default
     scale: 'medium', // no default value
     data: {
       token1: 'value'
@@ -614,7 +614,8 @@ hikaru.removeCluster(
   {
     branch: 'special', // 'master' is default
     // kubernetes API/cluster version
-    version: '1.8', // '1.7' is default
+    // can be auto-detected if authenticating via user-password
+    version: '1.8', // '1.10' is default
     data: {
       token1: 'value'
       token2: 100

@@ -34,7 +34,7 @@ module.exports = function () {
     url: url,
     username: process.env[ USERNAME ],
     password: process.env[ PASSWORD ],
-    version: process.env[ VERSION ] || '1.7',
+    version: process.env[ VERSION ] || '1.10',
     token: readIfFile(process.env[ TOKEN ]),
     caFile: process.env[ CA ],
     certFile: process.env[ CERT ],
