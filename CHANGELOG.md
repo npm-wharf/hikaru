@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.14.0"></a>
+# [1.14.0](https://github.com/npm-wharf/hikaru/compare/v1.13.0...v1.14.0) (2019-01-07)
+
+
+### Features
+
+* update mcgonagall to 1.11.0 to support shared services, properly detect when workloads cannot be patched or replaced due to selector changes. ([8373d40](https://github.com/npm-wharf/hikaru/commit/8373d40))
+
+
+
 <a name="1.13.0"></a>
 # [1.13.0](https://github.com/npm-wharf/hikaru/compare/v1.12.3...v1.13.0) (2019-01-05)
 
