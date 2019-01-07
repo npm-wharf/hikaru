@@ -31,6 +31,9 @@ function canPatch (diff, type) {
   if (hasServicePort(diff)) {
     return false
   }
+  if (hasSelector(diff)) {
+    return false
+  }
   return true
 }
 
@@ -42,6 +45,9 @@ function canReplace (diff, type) {
     return false
   }
   if (diff.spec && diff.spec.clusterIP) {
+    return false
+  }
+  if (hasSelector(diff)) {
     return false
   }
   return true
@@ -148,6 +154,12 @@ function hasContainerPort (diff) {
       return p.containerPort || p.name
     })
   })
+}
+
+function hasSelector (diff) {
+  const selector = ((diff.spec || {})
+    .selector)
+  return selector
 }
 
 function hasServicePort (diff) {

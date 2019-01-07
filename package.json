@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "@npm-wharf/auto-kubernetes-client": "^0.6.1",
-    "@npm-wharf/mcgonagall": "^1.10.5",
+    "@npm-wharf/mcgonagall": "^1.11.0",
     "async-retry": "^1.2.1",
     "bluebird": "^3.5.1",
     "bole": "^3.0.2",

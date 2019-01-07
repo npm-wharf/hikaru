@@ -508,6 +508,21 @@ describe('Spec Differences', function () {
       }).should.equal(false)
     })
 
+    it('should return false for patch and replace when spec changes select', function () {
+      canPatch({
+        spec: {
+          selector: {
+          }
+        }
+      }).should.equal(false)
+      canReplace({
+        spec: {
+          selector: {
+          }
+        }
+      }).should.equal(false)
+    })
+
     it('should return false for patch and true for replace when port is included', function () {
       canPatch({
         spec: {
