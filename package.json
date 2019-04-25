@@ -77,5 +77,10 @@
       "sinon",
       "expect"
     ]
+  },
+  "nyc": {
+    "exclude": [
+      "spec"
+    ]
   }
 }
