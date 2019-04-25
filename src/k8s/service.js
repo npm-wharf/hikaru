@@ -41,7 +41,7 @@ async function checkService (client, namespace, name, outcome) {
   })
 }
 
-async function createService (client, deletes, service) {
+async function createService (client, service) {
   const namespace = service.metadata.namespace || 'default'
   const name = service.metadata.name
   let create = async () => {
@@ -109,9 +109,9 @@ async function updateService (client, namespace, name, diff) {
   await checkService(client, namespace, name, 'update')
 }
 
-module.exports = function (client, deletes) {
+module.exports = function (client) {
   return {
-    create: createService.bind(null, client, deletes),
+    create: createService.bind(null, client),
     delete: deleteService.bind(null, client),
     list: listServices.bind(null, client),
     replace: replaceService.bind(null, client),
