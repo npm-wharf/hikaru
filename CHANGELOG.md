@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.15.0"></a>
+# [1.15.0](https://github.com/npm-wharf/hikaru/compare/v1.14.0...v1.15.0) (2019-04-26)
+
+
+### Features
+
+* allow passing extra config as parameters, rather than through fount ([#9](https://github.com/npm-wharf/hikaru/issues/9)) ([58b90f5](https://github.com/npm-wharf/hikaru/commit/58b90f5))
+
+
+
 <a name="1.14.0"></a>
 # [1.14.0](https://github.com/npm-wharf/hikaru/compare/v1.13.0...v1.14.0) (2019-01-07)
 
