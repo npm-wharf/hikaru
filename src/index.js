@@ -1,7 +1,7 @@
 const mcgonagall = require('@npm-wharf/mcgonagall')
 const connection = require('./connection')
 const fount = require('fount')
-const log = require('pino')({ name: 'hikaru' })
+const log = require('bole')('hikaru')
 const _ = require('lodash')
 
 fount.register('cluster', require('./cluster'))
@@ -10,7 +10,6 @@ fount.register('client', config => {
   return connection.getClient(config)
     .catch(err => {
       log.error(err.message)
-      console.error(err.stack)
       return null
     })
 })
@@ -32,7 +31,7 @@ async function aliasCluster (aliasCache, options) {
   return aliasCache.addAlias(options.alias, options)
 }
 
-async function deployCluster (path, options, extraConfig) {
+async function deployCluster (path, options, extraConfig = {}) {
   const config = await fount.resolve('config')
   Object.assign(config, extraConfig)
   const cluster = await getCluster()
