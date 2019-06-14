@@ -67,7 +67,7 @@ async function createDeployment (client, deletes, deployment) {
   const name = deployment.metadata.name
   let create = async () => {
     await multiple(client, namespace).create(deployment)
-      .catch(result => {}, err => {
+      .catch(err => {
         throw new Error(`Deployment '${namespace}.${name}' failed to create:\n\t${err.message}`)
       })
     await checkDeployment(client, namespace, name, 'creation')
