@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.16.0"></a>
+# [1.16.0](https://github.com/npm-wharf/hikaru/compare/v1.15.0...v1.16.0) (2019-06-27)
+
+
+### Features
+
+* update apiVersions for later k8s versions ([#13](https://github.com/npm-wharf/hikaru/issues/13)) ([6b8797b](https://github.com/npm-wharf/hikaru/commit/6b8797b))
+
+
+
 <a name="1.15.0"></a>
 # [1.15.0](https://github.com/npm-wharf/hikaru/compare/v1.14.0...v1.15.0) (2019-04-26)
 
