@@ -8,7 +8,10 @@ const GROUPS = {
   '1.9': 'rbac.authorization.k8s.io/v1',
   '1.10': 'rbac.authorization.k8s.io/v1',
   '1.11': 'rbac.authorization.k8s.io/v1',
-  '1.12': 'rbac.authorization.k8s.io/v1'
+  '1.12': 'rbac.authorization.k8s.io/v1',
+  '1.13': 'rbac.authorization.k8s.io/v1',
+  '1.14': 'rbac.authorization.k8s.io/v1',
+  '1.15': 'rbac.authorization.k8s.io/v1'
 }
 
 function group (client) {
