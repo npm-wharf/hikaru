@@ -9,7 +9,10 @@ const GROUPS = {
   '1.9': 'batch/v1beta1',
   '1.10': 'batch/v1beta1',
   '1.11': 'batch/v1beta1',
-  '1.12': 'batch/v1beta1'
+  '1.12': 'batch/v1beta1',
+  '1.13': 'batch/v1beta1',
+  '1.14': 'batch/v1beta1',
+  '1.15': 'batch/v1beta1'
 }
 
 function group (client) {
