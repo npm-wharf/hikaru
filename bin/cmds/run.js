@@ -42,8 +42,8 @@ exports.handler = async function (argv) {
     const version = kubectl.version(options.context)
     options.version = `${version.serverVersion.major}.${version.serverVersion.minor.replace(/[^0-9]/g, '')}`
   } catch (err) {
-    console.error(err.message)
     process.exitCode = 1
+    console.error(err.message)
     return
   }
 

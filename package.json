@@ -12,6 +12,7 @@
     "yargs": "^9.0.1"
   },
   "devDependencies": {
+    "chai": "^4.2.0",
     "mocha": "^6.1.4",
     "sinon": "^7.3.2",
     "standard": "^10.0.2",
@@ -20,7 +21,8 @@
   "scripts": {
     "lint": "standard",
     "lint:fix": "standard --fix",
-    "release": "standard-version"
+    "release": "standard-version",
+    "test": "mocha spec/**/*.spec.js"
   },
   "repository": {
     "type": "git",
