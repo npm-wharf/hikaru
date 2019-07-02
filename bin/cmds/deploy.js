@@ -29,7 +29,7 @@ exports.builder = function (yargs) {
 exports.handler = async function (argv) {
   const options = {
     context: argv.context,
-    scale: argv.spec
+    spec: argv.spec
   }
 
   try {
@@ -58,7 +58,7 @@ exports.handler = async function (argv) {
   try {
     await hikaru.deploy(options)
   } catch (err) {
-    console.error(err.message)
+    console.error(err.stack)
     process.exitCode = 1
   }
 }
