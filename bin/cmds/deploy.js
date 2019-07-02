@@ -28,15 +28,27 @@ exports.builder = function (yargs) {
 
 exports.handler = async function (argv) {
   const options = {
-    spec: argv.spec,
-    context: argv.context
+    context: argv.context,
+    scale: argv.spec
   }
 
-  const version = kubectl.version(options.context)
-  options.version = `${version.serverVersion.major}.${version.serverVersion.minor.replace(/[^0-9]/g, '')}`
+  try {
+    const version = kubectl.version(options.context)
+    options.version = `${version.serverVersion.major}.${version.serverVersion.minor.replace(/[^0-9]/g, '')}`
+  } catch (err) {
+    console.error(err.message)
+    process.exitCode = 1
+    return
+  }
 
   if (argv.tokenFile) {
-    options.data = yaml.safeLoad(fs.readFileSync(path.resolve(argv.tokenFile), { encoding: 'utf8' }))
+    try {
+      options.data = yaml.safeLoad(fs.readFileSync(path.resolve(argv.tokenFile), { encoding: 'utf8' }))
+    } catch (err) {
+      console.error(err.message)
+      process.exitCode = 1
+      return
+    }
   }
 
   if (argv.scale) {

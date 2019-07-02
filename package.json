@@ -12,6 +12,8 @@
     "yargs": "^9.0.1"
   },
   "devDependencies": {
+    "mocha": "^6.1.4",
+    "sinon": "^7.3.2",
     "standard": "^10.0.2",
     "standard-version": "^4.2.0"
   },
