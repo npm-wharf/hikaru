@@ -32,6 +32,7 @@ exports.builder = function (yargs) {
 }
 
 exports.handler = async function (argv) {
+  console.time('Run time')
   const options = {
     context: argv.context,
     job: argv.job,
@@ -42,8 +43,9 @@ exports.handler = async function (argv) {
     const version = kubectl.version(options.context)
     options.version = `${version.serverVersion.major}.${version.serverVersion.minor.replace(/[^0-9]/g, '')}`
   } catch (err) {
-    process.exitCode = 1
     console.error(err.message)
+    console.timeEnd('Run time')
+    process.exitCode = 1
     return
   }
 
@@ -52,6 +54,7 @@ exports.handler = async function (argv) {
       options.data = yaml.safeLoad(fs.readFileSync(path.resolve(argv.tokenFile), { encoding: 'utf8' }))
     } catch (err) {
       console.error(err.message)
+      console.timeEnd('Run time')
       process.exitCode = 1
       return
     }
@@ -67,4 +70,5 @@ exports.handler = async function (argv) {
     console.error(err.message)
     process.exitCode = 1
   }
+  console.timeEnd('Run time')
 }

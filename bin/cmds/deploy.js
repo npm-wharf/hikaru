@@ -27,6 +27,7 @@ exports.builder = function (yargs) {
 }
 
 exports.handler = async function (argv) {
+  console.time('Run time')
   const options = {
     context: argv.context,
     spec: argv.spec
@@ -37,6 +38,7 @@ exports.handler = async function (argv) {
     options.version = `${version.serverVersion.major}.${version.serverVersion.minor.replace(/[^0-9]/g, '')}`
   } catch (err) {
     console.error(err.message)
+    console.timeEnd('Run time')
     process.exitCode = 1
     return
   }
@@ -46,6 +48,7 @@ exports.handler = async function (argv) {
       options.data = yaml.safeLoad(fs.readFileSync(path.resolve(argv.tokenFile), { encoding: 'utf8' }))
     } catch (err) {
       console.error(err.message)
+      console.timeEnd('Run time')
       process.exitCode = 1
       return
     }
@@ -58,7 +61,8 @@ exports.handler = async function (argv) {
   try {
     await hikaru.deploy(options)
   } catch (err) {
-    console.error(err.stack)
+    console.error(err.message)
     process.exitCode = 1
   }
+  console.timeEnd('Run time')
 }
