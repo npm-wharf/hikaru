@@ -1,12 +1,8 @@
 const hikaru = require('../lib')
-const sinon = require('sinon')
-const child_process = require('child_process')
 const { expect, assert } = require('chai')
 
 describe('hikaru run', function () {
-
   it('handles invalid job names', async function () {
-
     const options = { version: '0.0', context: 'test', spec: 'spec/test-spec' }
     await hikaru.run({ job: 'nodot', ...options })
       .then(() => {
