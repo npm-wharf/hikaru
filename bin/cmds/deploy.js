@@ -3,6 +3,7 @@
 const fs = require('fs')
 const path = require('path')
 const yaml = require('js-yaml')
+const Logger = require('@nlf/cli-logger')
 
 const hikaru = require('../../lib')
 const kubectl = require('../../lib/kubectl')
@@ -24,21 +25,35 @@ exports.builder = function (yargs) {
       alias: 'f',
       description: 'path to file containing tokens to be applied to the spec'
     })
+    .option('verbose', {
+      alias: 'v',
+      type: 'boolean',
+      description: 'verbose mode, extra logging output'
+    })
 }
 
 exports.handler = async function (argv) {
-  console.time('Run time')
   const options = {
     context: argv.context,
     spec: argv.spec
   }
+  const logOptions = {
+    name: 'hikaru'
+  }
+  if (argv.verbose) {
+    logOptions.level = 'debug'
+  }
+
+  const logger = new Logger(logOptions)
+  options.logger = new Logger(logger)
+  logger.time('running')
 
   try {
     const version = kubectl.version(options.context)
     options.version = `${version.serverVersion.major}.${version.serverVersion.minor.replace(/[^0-9]/g, '')}`
   } catch (err) {
-    console.error(err.message)
-    console.timeEnd('Run time')
+    logger.error(err.message)
+    logger.timeEnd('running')
     process.exitCode = 1
     return
   }
@@ -47,8 +62,8 @@ exports.handler = async function (argv) {
     try {
       options.data = yaml.safeLoad(fs.readFileSync(path.resolve(argv.tokenFile), { encoding: 'utf8' }))
     } catch (err) {
-      console.error(err.message)
-      console.timeEnd('Run time')
+      logger.error(err.message)
+      logger.timeEnd('running')
       process.exitCode = 1
       return
     }
@@ -61,8 +76,8 @@ exports.handler = async function (argv) {
   try {
     await hikaru.deploy(options)
   } catch (err) {
-    console.error(err.message)
+    logger.error(err.message)
     process.exitCode = 1
   }
-  console.timeEnd('Run time')
+  logger.timeEnd('running')
 }
