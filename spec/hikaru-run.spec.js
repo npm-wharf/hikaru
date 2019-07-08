@@ -6,6 +6,7 @@ describe('hikaru run', function () {
     const options = { version: '0.0', context: 'test', spec: 'spec/test-spec' }
     await hikaru.run({ job: 'nodot', ...options })
       .then(() => {
+        /* istanbul ignore next */
         assert.fail('should not succeed')
       })
       .catch((err) => {
@@ -13,6 +14,7 @@ describe('hikaru run', function () {
       })
     await hikaru.run({ job: 'one.toomany.dots', ...options })
       .then(() => {
+        /* istanbul ignore next */
         assert.fail('should not succeed')
       })
       .catch((err) => {
@@ -24,6 +26,7 @@ describe('hikaru run', function () {
     const options = { version: '0.0', context: 'test', spec: 'spec/test-spec' }
     await hikaru.run({ job: 'invalid.jobname', ...options })
       .then(() => {
+        /* istanbul ignore next */
         assert.fail('should not succeed')
       })
       .catch((err) => {
