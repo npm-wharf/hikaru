@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "@nlf/cli-logger": "^1.1.0",
-    "@npm-wharf/mcgonagall": "^1.11.0",
+    "@npm-wharf/mcgonagall": "^2.0.0",
     "js-yaml": "^3.9.0",
     "yargs": "^9.0.1"
   },
@@ -40,6 +40,8 @@
   },
   "homepage": "https://github.com/npm-wharf/hikaru#readme",
   "standard": {
-    "env": ["mocha"]
+    "env": [
+      "mocha"
+    ]
   }
 }
