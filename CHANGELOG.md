@@ -2,6 +2,72 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="2.0.0"></a>
+# [2.0.0](https://github.com/npm-wharf/hikaru/compare/v1.16.0...v2.0.0) (2019-07-09)
+
+
+### Features
+
+* simplify drastically ([#14](https://github.com/npm-wharf/hikaru/issues/14)) ([27c6ad5](https://github.com/npm-wharf/hikaru/commit/27c6ad5))
+
+
+### BREAKING CHANGES
+
+* gut everything, start over with a minimal wrapper around mcgonagall + kubectl
+
+* chore: remove unused server pieces
+
+* chore: remove console log
+
+* feat: implement run command
+
+* fix(cmds): add guards to ensure kubectl/context exists
+
+* chore(tests): basic barebones test started
+
+just tests the preflight checks for the deploy command
+
+* chore(logging): add basic logging
+
+* fix(logging): add run time logging
+
+* fix(logging): a little more helpful output
+
+* fix(run): verify job exists in spec before running it
+
+basic check on job name too
+
+* chore(tests): add valid job to test spec
+
+for future testing
+
+* chore(tests): add tests for hikaru.run job validation
+
+* chore(logging): switch to logging lib
+
+parse actual resource kind when determining how to log,
+fix linting
+
+* chore(linting): fix linting in tests
+
+* chore(dependencies): update to latest @npm-wharf/mcgonagall
+
+* chore(linting): use unuque variable name for gathered resources
+
+* chore(testing): consolidate stubbing spawnSync
+
+add coverage exceptions for code that should not run in tests
+
+* chore(packages): add nyc so CI tests can run again
+
+* chore(packages): install coveralls so CI tests can run again
+
+* fix(logging): account for a loadbalancer w/ no ingress
+
+* chore: clean up docs
+
+
+
 <a name="1.16.0"></a>
 # [1.16.0](https://github.com/npm-wharf/hikaru/compare/v1.15.0...v1.16.0) (2019-06-27)
 
