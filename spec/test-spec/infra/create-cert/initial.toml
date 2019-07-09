@@ -1,0 +1,7 @@
+name = "route53bot.infra"
+job = true
+image = "test/k8s-route53bot:latest"
+labels = "external-access=true"
+
+[scale]
+  containers = 1
